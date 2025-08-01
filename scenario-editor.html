@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シナリオ管理画面</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+        }
+        #sidebar {
+            width: 250px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+        }
+        #main-content {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        #scenario-list h3 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h3>シナリオ一覧</h3>
+        <div id="filter-container"></div>
+        <hr>
+        <div id="scenario-list">
+            <!-- シナリオ一覧がここに動的に挿入されます -->
+        </div>
+    </div>
+    <div id="main-content">
+        <h1>シナリオエディタ</h1>
+        <p>サイドバーからシナリオを選択して編集を開始してください。</p>
+        <div id="form-container"></div>
+         <div id="form-actions" style="display: none;">
+            <button type="submit" form="scenario-form">保存</button>
+            <button type="button" id="test-play-button">テストプレイ</button>
+         </div>
+    </div>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/scenario-editor.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+{
+    "game_id": "cube_in_wilderness",
+    "title": "荒野の立方体",
+    "theme": "探索アドベンチャー",
+    "description": "広大な荒野に現れた巨大な立方体の建造物を調査するアドベンチャー。その謎を解き明かし、生き残れるか？",
+    "steps": [
+        {
+            "step_id": "step_1",
+            "text_content": "あなたは広大な荒野をさまよっている。遠くに見える巨大な立方体の建造物が、異様な存在感を放っている。近づいてみるか？",
+            "actions": [
+                {
+                    "text": "建造物に近づく",
+                    "next_step_id": "step_2"
+                },
+                {
+                    "text": "別の道を進む（ゲームオーバー）",
+                    "next_step_id": "game_over"
+                }
+            ]
+        },
+        {
+            "step_id": "step_2",
+            "text_content": "建造物に近づくと、その巨大さが改めてわかる。表面は滑らかで、窓や扉らしきものは見当たらない。何か手がかりを探してみよう。",
+            "actions": [
+                {
+                    "text": "建造物を一周してみる",
+                    "next_step_id": "step_3"
+                },
+                {
+                    "text": "建造物を叩いてみる",
+                    "next_step_id": "step_4"
+                }
+            ]
+        },
+        {
+            "step_id": "step_3",
+            "text_content": "建造物を一周してみたが、特に変わったものは見つからない。しかし、建物の裏側に小さな穴を発見した。",
+            "actions": [
+                {
+                    "text": "穴を調べてみる",
+                    "next_step_id": "step_5"
+                }
+            ]
+        },
+        {
+            "step_id": "step_4",
+            "text_content": "建造物を叩いてみたが、何も反応がない。頑丈な材質で作られているようだ。",
+            "actions": [
+                {
+                    "text": "建造物を一周してみる",
+                    "next_step_id": "step_3"
+                }
+            ]
+        },
+        {
+            "step_id": "step_5",
+            "text_content": "穴を覗き込むと、狭い通路が見えた。中に入ってみる？",
+            "actions": [
+                {
+                    "text": "中に入る",
+                    "next_step_id": "step_6"
+                },
+                {
+                    "text": "諦めて引き返す（ゲームオーバー）",
+                    "next_step_id": "game_over"
+                }
+            ]
+        },
+        {
+            "step_id": "step_6",
+            "text_content": "狭い通路を抜けると、建造物の内部にたどり着いた。そこは広大な空間で、中央に謎の装置がある。",
+            "actions": [
+                {
+                    "text": "装置を調べる",
+                    "next_step_id": "step_7"
+                }
+            ]
+        },
+        {
+            "step_id": "step_7",
+            "text_content": "装置を調べると、いくつかのボタンとディスプレイが見つかった。何らかの操作が必要そうだ。",
+            "actions": [
+                {
+                    "text": "適当にボタンを押してみる（成功確率50%）",
+                    "next_step_id": "step_8"
+                }
+            ]
+        },
+        {
+            "step_id": "step_8",
+            "text_content": "ボタンを押した結果… (成功or失敗)",
+            "actions": [],
+            "is_final": true,
+            "clear_message": "あなたは謎を解き明かし、生き残った！ (成功時)"
+        },
+        {
+            "step_id": "game_over",
+            "text_content": "あなたは危険を冒し、命を落とした。",
+            "actions": [],
+            "is_final": true,
+            "clear_message": "ゲームオーバー"
+        }
+    ]
+}

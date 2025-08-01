@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アドベンチャーゲーム作成AI</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>アドベンチャーゲーム作成AI</h1>
+        <p>プロンプトを入力して、アドベンチャーゲームのシナリオを生成しよう</p>
+    </header>
+
+    <main>
+        <section id="generator">
+            <h2>ゲームシナリオを生成する</h2>
+            <textarea id="prompt-input" placeholder="ゲームのプロンプトを入力してください..." rows="4"></textarea>
+            <button id="generate-button">生成する</button>
+        </section>
+        <section id="story-output">
+            <h2>生成されたゲームシナリオ</h2>
+            <div id="story-container">
+                <!-- ここに生成された物語が表示されます -->
+            </div>
+        </section>
+
+
+    </main>
+
+    <footer>
+        <nav>
+            <ul>
+                <li><a href="/archive.html">ゲーム一覧</a></li>
+                <li><a href="/static/how-to-play.html">遊び方</a></li>
+                <li><a href="/static/privacy-policy.html">プライバシーポリシー</a></li>
+            </ul>
+        </nav>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

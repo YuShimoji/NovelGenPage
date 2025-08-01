@@ -1,0 +1,80 @@
+{
+    "game_id": "sample_game",
+    "title": "サンプルゲーム：書斎の謎",
+    "theme": "書斎からの脱出",
+    "description": "あなたは古い書斎に閉じ込められています。机の上のメモを頼りに、脱出の手がかりを見つけましょう。",
+    "inventory": [],
+    "flags": {},
+    "steps": [
+        {
+            "step_id": "step_1",
+            "text_content": "重厚な木の扉に鍵がかかっており、あなたは書斎に閉じ込められている。部屋の中央には大きな机が一つ。まずは机の上を調べてみよう。",
+            "actions": [
+                {
+                    "text": "机の上のメモを読む",
+                    "next_step_id": "step_2"
+                },
+                {
+                    "text": "部屋を見渡す",
+                    "next_step_id": "step_1_look_around"
+                }
+            ]
+        },
+        {
+            "step_id": "step_1_look_around",
+            "text_content": "部屋は豪華な装飾で、壁には風景画が飾られている。机以外に特にめぼしいものはないようだ。",
+            "actions": [
+                {
+                    "text": "机の上のメモを読む",
+                    "next_step_id": "step_2"
+                }
+            ]
+        },
+        {
+            "step_id": "step_2",
+            "text_content": "メモにはこう書かれている。『壁にかけられた絵画の裏を見よ』。壁には風景画が飾られている。",
+            "actions": [
+                {
+                    "text": "壁の絵画を調べる",
+                    "next_step_id": "step_3",
+                    "actions_on_enter": [
+                        {
+                            "type": "add_to_inventory",
+                            "item": "key"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "step_id": "step_3",
+            "text_content": "絵画を壁から外すと、裏に小さな鍵がテープで貼り付けられていた。この鍵は、机の引き出しに使えそうだ。",
+            "actions": [
+                {
+                    "text": "鍵を使って机の引き出しを開ける",
+                    "next_step_id": "step_4",
+                    "conditions": {
+                        "inventory_has": "key"
+                    }
+                }
+            ]
+        },
+        {
+            "step_id": "step_4",
+            "text_content": "引き出しの中には、古びたドライバーが入っていた。扉の蝶番が少し緩んでいることに、あなたは気づく。",
+            "actions": [
+                {
+                    "text": "ドライバーで扉の蝶番を外す",
+                    "next_step_id": "final_step"
+                }
+            ]
+        },
+        {
+            "step_id": "final_step",
+            "text_content": "蝶番を外すと、扉はあっけなく開いた。あなたは無事に書斎から脱出することができた。",
+            "actions": [],
+            "is_final": true,
+            "clear_message": "ゲームクリア！おめでとうございます！"
+        }
+    ]
+}
