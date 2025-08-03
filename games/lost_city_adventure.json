@@ -1,0 +1,126 @@
+{
+    "game_id": "lost_city_adventure",
+    "title": "失われた都市の冒険",
+    "theme": "探索型アドベンチャー",
+    "description": "古代文明の失われた都市を探検し、謎を解き明かして脱出を目指しましょう。",
+    "inventory": [],
+    "flags": {
+        "temple_entered": false,
+        "puzzle_solved": false
+    },
+    "steps": [
+        {
+            "step_id": "step_1",
+            "text_content": "あなたはジャングルの奥深く、古代文明の噂が残る地にたどり着いた。目の前には崩れかけた石の門がある。",
+            "actions": [
+                {
+                    "text": "石の門を調べる",
+                    "next_step_id": "step_2"
+                },
+                {
+                    "text": "ジャングルをさらに奥へ進む",
+                    "next_step_id": "step_1_jungle"
+                }
+            ]
+        },
+        {
+            "step_id": "step_1_jungle",
+            "text_content": "ジャングルは深く、危険に満ちている。進むべき道が見つからない。",
+            "actions": [
+                {
+                    "text": "石の門に戻る",
+                    "next_step_id": "step_2"
+                }
+            ]
+        },
+        {
+            "step_id": "step_2",
+            "text_content": "石の門には複雑な模様が刻まれている。何か仕掛けがありそうだ。",
+            "actions": [
+                {
+                    "text": "模様をよく観察する",
+                    "next_step_id": "step_3"
+                }
+            ]
+        },
+        {
+            "step_id": "step_3",
+            "text_content": "模様をよく見ると、特定の順番で押す必要があるボタンがあることに気付いた。",
+            "actions": [
+                {
+                    "text": "ボタンを順番に押してみる",
+                    "next_step_id": "step_4"
+                }
+            ]
+        },
+        {
+            "step_id": "step_4",
+            "text_content": "ボタンを押すと、石の門が開いた！",
+            "actions_on_enter": [
+                {
+                    "type": "set_flag",
+                    "flag_name": "temple_entered",
+                    "value": true
+                }
+            ],
+            "actions": [
+                {
+                    "text": "門の中に入る",
+                    "next_step_id": "step_5"
+                }
+            ]
+        },
+        {
+            "step_id": "step_5",
+            "text_content": "あなたは古代寺院の中に入った。そこには謎の石版がある。",
+            "actions": [
+                {
+                    "text": "石版を調べる",
+                    "next_step_id": "step_6"
+                }
+            ],
+            "conditions": [
+                {
+                    "flag_is": {
+                        "flag_name": "temple_entered",
+                        "value": true
+                    }
+                }
+            ]
+        },
+        {
+            "step_id": "step_6",
+            "text_content": "石版には複雑な謎が刻まれている。解き明かすと、寺院からの脱出方法がわかるかもしれない。",
+            "actions": [
+                {
+                    "text": "謎を解く",
+                    "next_step_id": "step_7"
+                }
+            ]
+        },
+        {
+            "step_id": "step_7",
+            "text_content": "あなたは謎を解き明かした！寺院の秘密の通路を発見した！",
+            "actions_on_enter": [
+                {
+                    "type": "set_flag",
+                    "flag_name": "puzzle_solved",
+                    "value": true
+                }
+            ],
+            "actions": [
+                {
+                    "text": "秘密の通路を通って脱出する",
+                    "next_step_id": "step_8"
+                }
+            ]
+        },
+        {
+            "step_id": "step_8",
+            "text_content": "あなたは無事に失われた都市から脱出した！",
+            "actions": [],
+            "is_final": true,
+            "clear_message": "おめでとう！あなたは失われた都市の冒険をクリアしました！"
+        }
+    ]
+}

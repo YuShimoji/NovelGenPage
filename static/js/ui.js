@@ -13,9 +13,7 @@ export function initializeUI(gameData) {
     gameDescriptionElement.textContent = gameData.description;
 }
 
-export function updateStepUI(actionCallback) { // actionCallbackを引数に追加
-    const currentStep = gameState.getCurrentStep();
-
+export function updateStepUI(currentStep, actionCallback) { // actionCallbackを引数に追加
     if (!currentStep) {
         stepTextElement.textContent = 'エラー: 次のステップが見つかりません。';
         actionButtonsContainer.style.display = 'none';
@@ -23,7 +21,9 @@ export function updateStepUI(actionCallback) { // actionCallbackを引数に追�
     }
 
     typeWriter(currentStep.text_content, () => {
-        renderActionButtons(currentStep, actionCallback); // actionCallbackを渡す
+        if (!currentStep.is_final) {
+            renderActionButtons(currentStep, actionCallback); // actionCallbackを渡す
+        }
     });
 
     if (currentStep.is_final || !currentStep.actions || currentStep.actions.length === 0) {

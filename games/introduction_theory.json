@@ -1,0 +1,98 @@
+{
+    "game_id": "introduction_theory",
+    "title": "序文の理論",
+    "theme": "謎解きアドベンチャー",
+    "description": "誰も定式化していない「序文の理論」を探求する謎解きゲーム。序文の本質を解き明かし、真の結末へ至れ。",
+    "inventory": [],
+    "flags": {
+        "found_manuscript": false,
+        "decoded_cipher": false,
+        "understood_theory": false
+    },
+    "steps": [
+        {
+            "step_id": "step_1",
+            "text_content": "あなたは古びた書斎にいます。埃っぽい机の上には、古ぼけた革張りのノートと、奇妙な記号が書かれた紙片があります。",
+            "actions": [
+                {
+                    "text": "ノートを読む",
+                    "next_step_id": "step_2"
+                },
+                {
+                    "text": "紙片を調べる",
+                    "next_step_id": "step_3"
+                }
+            ]
+        },
+        {
+            "step_id": "step_2",
+            "text_content": "ノートには、序文に関する断片的な記述が散らばっています。しかし、重要な部分が欠けています。",
+            "actions": [
+                {
+                    "text": "紙片とノートを比較する",
+                    "next_step_id": "step_4"
+                }
+            ]
+        },
+        {
+            "step_id": "step_3",
+            "text_content": "紙片には、複雑な記号が書き込まれています。一見ランダムなように見えますが、何か規則性がありそうな気配を感じます。",
+            "actions": [
+                {
+                    "text": "記号を解読してみる",
+                    "next_step_id": "step_5"
+                }
+            ]
+        },
+        {
+            "step_id": "step_4",
+            "text_content": "ノートの欠けた部分と紙片の記号が一致する部分があることに気づきました！どうやら、この記号は暗号のようです。",
+            "actions": [
+                {
+                    "text": "記号を解読してみる",
+                    "next_step_id": "step_5"
+                }
+            ]
+        },
+        {
+            "step_id": "step_5",
+            "text_content": "暗号を解読しました！それは、序文の理論に関する重要な手がかりでした。",
+            "actions_on_enter": [
+                {
+                    "type": "set_flag",
+                    "flag_name": "decoded_cipher",
+                    "value": true
+                }
+            ],
+            "actions": [
+                {
+                    "text": "序文の理論を考察する",
+                    "next_step_id": "step_6"
+                }
+            ]
+        },
+        {
+            "step_id": "step_6",
+            "text_content": "あなたは、序文の理論を理解しました！それは、単なる形式的な挨拶ではなく、批評の隠された本質を明らかにする鍵でした。",
+            "actions_on_enter": [
+                {
+                    "type": "set_flag",
+                    "flag_name": "understood_theory",
+                    "value": true
+                }
+            ],
+            "actions": [
+                {
+                    "text": "ゲームをクリアする",
+                    "next_step_id": "step_7"
+                }
+            ]
+        },
+        {
+            "step_id": "step_7",
+            "text_content": "あなたは序文の理論を解き明かしました！おめでとうございます！",
+            "is_final": true,
+            "clear_message": "あなたは「序文の理論」を解明しました！真の批評家としての道を歩む準備はできましたか？"
+        }
+    ]
+}

@@ -9,39 +9,44 @@
 <body>
     <div class="container">
         <h1>ゲーム一覧</h1>
-        <ul id="game-list"></ul>
-        <a href="/static/index.html">ゲームを作成する</a>
-    </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const gameListElement = document.getElementById('game-list');
+        <ul id="game-list">
+            <!-- ゲームのリストがここに表示されます -->
+        </ul>
 
-            try {
-                const response = await fetch('/games/archive_list.json');
-                if (!response.ok) {
-                    throw new Error('ゲーム一覧の読み込みに失敗しました。');
-                }
-                const games = await response.json();
+        <a href="/scenario-editor.html">ゲームシナリオを作成する</a>
 
-                if (games.length === 0) {
-                    gameListElement.innerHTML = '<li>まだゲームがありません。</li>';
-                    return;
-                }
+        <script src="/static/js/api.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', async () => {
+                const gameListElement = document.getElementById('game-list');
 
-                const listItems = games.map(game => {
-                    // game_id が存在することを確認
-                    if (game.game_id) {
-                        return `<li><a href="/game.html?game_id=${game.game_id}">${game.title || '無題のゲーム'}</a>: ${game.description || '説明なし'}</li>`;
+                try {
+                    const response = await fetch('/games/archive_list.json');
+                    if (!response.ok) {
+                        throw new Error('ゲーム一覧の読み込みに失敗しました。');
                     }
-                    return ''; // game_id がない場合は何も表示しない
-                }).join('');
-                gameListElement.innerHTML = listItems;
+                    const games = await response.json();
 
-            } catch (error) {
-                console.error('ゲーム一覧の読み込みに失敗しました:', error);
-                gameListElement.innerHTML = '<li>ゲーム一覧の読み込みに失敗しました。</li>';
-            }
-        });
-    </script>
+                    if (games.length === 0) {
+                        gameListElement.innerHTML = '<li>まだゲームがありません。</li>';
+                        return;
+                    }
+
+                    const listItems = games.map(game => {
+                        // game_id が存在することを確認
+                        if (game.game_id) {
+                            return `<li><a href="/game.html?game_id=${game.game_id}">${game.title || '無題のゲーム'}</a>: ${game.description || '説明なし'}</li>`;
+                        }
+                        return ''; // game_id がない場合は何も表示しない
+                    }).join('');
+                    gameListElement.innerHTML = listItems;
+
+                } catch (error) {
+                    console.error('ゲーム一覧の読み込みに失敗しました:', error);
+                    gameListElement.innerHTML = '<li>ゲーム一覧の読み込みに失敗しました。</li>';
+                }
+            });
+        </script>
+    </div>
 </body>
 </html>

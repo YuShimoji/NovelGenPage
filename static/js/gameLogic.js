@@ -27,5 +27,5 @@ function updateGameStep() {
         }
     }
 
-    updateStepUI();
+    updateStepUI(currentStep, handleActionClick);
 }

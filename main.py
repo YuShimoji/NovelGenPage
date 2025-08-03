@@ -13,13 +13,30 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/games", StaticFiles(directory="games"), name="games")
 
-# ルートディレクトリのHTMLファイルを提供するためのルートを追加
-@app.get("/{file_path:path}")
-async def read_root_files(file_path: str):
-    file = os.path.join(os.getcwd(), file_path)
-    if os.path.exists(file) and file_path.endswith('.html'):
-        return FileResponse(file)
-    return JSONResponse(content={"error": "File not found"}, status_code=404)
+@app.get("/")
+async def read_index():
+    return FileResponse('static/index.html')
+
+# ルートディレクトリのHTMLファイルを提供するためのルートを個別に定義
+@app.get("/game.html")
+async def read_game_html():
+    return FileResponse('static/game.html')
+
+@app.get("/archive.html")
+async def read_archive_html():
+    return FileResponse('archive.html')
+
+@app.get("/how-to-play.html")
+async def read_how_to_play_html():
+    return FileResponse('how-to-play.html')
+
+@app.get("/privacy-policy.html")
+async def read_privacy_policy_html():
+    return FileResponse('privacy-policy.html')
+
+@app.get("/scenario-editor.html")
+async def read_scenario_editor_html():
+    return FileResponse('scenario-editor.html')
 
 class StoryPrompt(BaseModel):
     prompt: str
@@ -75,3 +92,21 @@ async def get_stories():
         return JSONResponse(content=stories)
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.get("/api/scenario/{game_id}")
+async def get_scenario(game_id: str):
+    file_path = f"games/{game_id}.json"
+    if not os.path.exists(file_path):
+        return JSONResponse(content={"error": "Game not found"}, status_code=404)
+    return FileResponse(file_path, media_type="application/json; charset=utf-8")
+
+# このキャッチオールルートは、他のどのルートにも一致しない場合にのみ機能させるため、最後に配置することが重要です。
+# しかし、FastAPIでは定義順に評価されるため、意図しない動作を引き起こす可能性があります。
+# 代わりに、必要なHTMLページのルートを明示的に定義する方が安全です。
+# 以下のルートはコメントアウトまたは削除を推奨します。
+# @app.get("/{file_path:path}")
+# async def read_root_files(file_path: str):
+#     file = os.path.join(os.getcwd(), file_path)
+#     if os.path.exists(file) and file_path.endswith('.html'):
+#         return FileResponse(file)
+#     return JSONResponse(content={"error": "File not found"}, status_code=404)

@@ -3,8 +3,7 @@
 /**
  * APIと通信するためのヘルパー関数群
  */
-
-const api = {
+export const api = {
     /**
      * プロンプトを元に新しいゲームを生成します。
      * @param {string} prompt
@@ -29,7 +28,7 @@ const api = {
      * @returns {Promise<object>} シナリオデータ
      */
     async getScenario(gameId) {
-        return this._get(`/games/${gameId}.json`);
+        return this._get(`/api/scenario/${gameId}`);
     },
 
     /**
@@ -37,7 +36,7 @@ const api = {
      * @returns {Promise<Array>} シナリオのリスト
      */
     async getScenarioList() {
-        return this._get('/games/archive_list.json');
+        return this._get('/api/stories');
     },
 
     /**
@@ -70,8 +69,19 @@ const api = {
      */
     async _handleResponse(response) {
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: 'Server error with no JSON response' }));
-            throw new Error(errorData.error || `API request failed with status ${response.status}`);
+            let errorMsg = `API request failed with status ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData.error || JSON.stringify(errorData);
+            } catch (e) {
+                // JSONのパースに失敗した場合、テキストとしてエラーを取得
+                try {
+                    const textError = await response.text();
+                    errorMsg = textError || errorMsg;
+                } catch (textErr) { /* ignore */ }
+            }
+            console.error('API Error:', errorMsg);
+            throw new Error(errorMsg);
         }
         return response.json();
     }

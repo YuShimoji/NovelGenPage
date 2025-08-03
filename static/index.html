@@ -7,37 +7,72 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <header>
-        <h1>アドベンチャーゲーム作成AI</h1>
-        <p>プロンプトを入力して、アドベンチャーゲームのシナリオを生成しよう</p>
-    </header>
+    <div class="app-container">
+        <!-- ホームビュー -->
+        <div id="home-view" class="view active">
+            <header>
+                <h1>アドベンチャーゲーム作成AI</h1>
+                <p>プロンプトを入力してゲームを生成するか、既存のゲームを選択してプレイしよう</p>
+            </header>
 
-    <main>
-        <section id="generator">
-            <h2>ゲームシナリオを生成する</h2>
-            <textarea id="prompt-input" placeholder="ゲームのプロンプトを入力してください..." rows="4"></textarea>
-            <button id="generate-button">生成する</button>
-        </section>
-        <section id="story-output">
-            <h2>生成されたゲームシナリオ</h2>
-            <div id="story-container">
-                <!-- ここに生成された物語が表示されます -->
-            </div>
-        </section>
+            <main>
+                <div class="home-view">
+                    <!-- ゲーム選択セクション -->
+                    <section class="game-selection-section">
+                        <h2>🎮 既存のゲームをプレイ</h2>
+                        <div id="game-list" class="game-grid">
+                            <!-- ゲーム一覧がここに表示されます -->
+                        </div>
+                    </section>
 
+                    <!-- ゲーム生成セクション -->
+                    <section class="generator-section">
+                        <h2>✨ 新しいゲームを生成</h2>
+                        <textarea id="prompt-input" placeholder="どんなアドベンチャーゲームを作りたいですか？&#10;例：「宇宙船で未知の惑星を探検する物語」"></textarea>
+                        <button id="generate-button">🚀 ゲームを生成する</button>
+                        
+                        <!-- 生成結果表示エリア -->
+                        <div id="story-container" style="margin-top: 1rem;">
+                            <!-- ここに生成された物語の情報が表示されます -->
+                        </div>
+                    </section>
+                </div>
+            </main>
 
-    </main>
+            <footer>
+                <nav>
+                    <ul>
+                        <li><a href="/scenario-editor.html">📝 シナリオ管理画面</a></li>
+                        <li><a href="/static/how-to-play.html">❓ 遊び方</a></li>
+                        <li><a href="/static/privacy-policy.html">🔒 プライバシーポリシー</a></li>
+                    </ul>
+                </nav>
+            </footer>
+        </div>
+        
+        <!-- ゲームプレイビュー -->
+        <div id="game-view" class="view">
+            <button class="back-button" id="back-to-home">🏠 ホームに戻る</button>
+            
+            <main class="game-view">
+                <div class="game-header">
+                    <h1 id="game-title"></h1>
+                    <p id="game-description"></p>
+                </div>
+                
+                <div class="game-content">
+                    <div id="step-text"></div>
+                    <div id="action-buttons"></div>
+                    <div id="clear-message" style="display: none;"></div>
+                </div>
+            </main>
+        </div>
+    </div>
 
-    <footer>
-        <nav>
-            <ul>
-                <li><a href="/archive.html">ゲーム一覧</a></li>
-                <li><a href="/static/how-to-play.html">遊び方</a></li>
-                <li><a href="/static/privacy-policy.html">プライバシーポリシー</a></li>
-            </ul>
-        </nav>
-    </footer>
-
-    <script src="/static/js/main.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/gameState.js" type="module"></script>
+    <script src="js/gameLogic.js" type="module"></script>
+    <script src="js/ui.js" type="module"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
