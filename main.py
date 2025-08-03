@@ -110,3 +110,9 @@ async def get_scenario(game_id: str):
 #     if os.path.exists(file) and file_path.endswith('.html'):
 #         return FileResponse(file)
 #     return JSONResponse(content={"error": "File not found"}, status_code=404)
+@app.get("/{file_path:path}")
+async def read_root_files(file_path: str):
+    file = os.path.join(os.getcwd(), file_path)
+    if os.path.exists(file) and file_path.endswith('.html'):
+        return FileResponse(file)
+    return JSONResponse(content={"error": "File not found"}, status_code=404)
