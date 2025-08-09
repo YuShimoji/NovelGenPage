@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>シナリオエディタ（管理者専用） - NovelGenPage</title>
+  <link rel="stylesheet" href="/static/css/editor.css">
+  <style>
+    .admin-notice {
+      background-color: #fff3cd;
+      color: #856404;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border-left: 4px solid #ffeeba;
+    }
+    .debug-info {
+      font-family: monospace;
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 20px;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+    .debug-toggle {
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 10px;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="editor-container">
+    <header>
+      <h1>シナリオエディタ <small>（管理者専用）</small></h1>
+      <nav>
+        <a href="/">トップに戻る</a>
+      </nav>
+      <div class="actions">
+        <button id="import-button" class="btn">構文チェック</button>
+        <button id="save-button" class="btn btn-primary">保存する</button>
+      </div>
+    </header>
+    
+    <div class="admin-notice">
+      <strong>管理者向け機能</strong>
+      <p>このページは管理者専用です。作成したシナリオは公開前に必ずプレビューで確認してください。</p>
+    </div>
+    
+    <div id="editor-status" class="status"></div>
+    
+    <div class="debug-panel">
+      <button class="debug-toggle" onclick="document.getElementById('debug-info').style.display = 
+        document.getElementById('debug-info').style.display === 'none' ? 'block' : 'none';">
+        デバッグ情報を表示/非表示
+      </button>
+      <pre id="debug-info" class="debug-info"></pre>
+    </div>
+    
+    <div class="editor-layout">
+      <div class="editor-panel">
+        <h2>マークダウンエディタ</h2>
+        <textarea id="scenario-editor" placeholder="# タイトル&#10;&#10;## シーン1&#10;テキストをここに入力...&#10;&#10;### 選択肢&#10;- [選択肢1](scene:2)&#10;- [選択肢2](scene:3)"># はじまりの冒険
+
+## プロローグ
+
+あなたは小さな村の住人です。今日も平和な一日が始まろうとしています。
+
+### 選択肢
+- [村を出る](scene:2)
+- [村に残る](scene:3)
+
+## 森の入り口
+
+森の入り口に着きました。薄暗い森の中から何か物音が聞こえます。
+
+### 選択肢
+- [森に入る](scene:4)
+- [村に戻る](scene:1)
+
+## 森の中
+
+森の中は思ったより暗く、足元が見えません。何かが動く気配がします。
+
+### 選択肢
+- [先に進む](scene:5)
+- [引き返す](scene:2)
+
+## 宝箱を見つけた
+
+森の奥に古びた宝箱を見つけました。
+
+### 選択肢
+- [開ける](scene:6)
+- [そのままにしておく](scene:7)
+
+## エンディング1
+
+宝箱を開けると、中から光が溢れ出しました。あなたはそのまま意識を失いました。
+
+## エンディング2
+
+宝箱を開けずに帰りました。何か後ろ髪を引かれる思いですが、これが正しい選択だったのでしょう。</textarea>
+      </div>
+      
+      <div class="preview-panel">
+        <h2>プレビュー</h2>
+        <div id="scenario-preview" class="preview-content"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/static/js/editor.js" type="module"></script>
+</body>
+</html>

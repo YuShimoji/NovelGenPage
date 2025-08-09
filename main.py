@@ -1,118 +1,221 @@
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any
-import os
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse, JSONResponse
+from pydantic import BaseModel
+from typing import List, Dict, Optional
+import re
 import uuid
-from gemini_client import generate_scenario_from_prompt
-from scenario_handler import save_scenario, get_archive_list, update_archive_list
+import os
+from pathlib import Path
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount("/games", StaticFiles(directory="games"), name="games")
+# テンプレートディレクトリの設定
+BASE_DIR = Path(__file__).resolve().parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
-@app.get("/")
-async def read_index():
-    return FileResponse('static/index.html')
+# 静的ファイルのマウント
+static_dir = BASE_DIR / "static"
+os.makedirs(static_dir, exist_ok=True)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-# ルートディレクトリのHTMLファイルを提供するためのルートを個別に定義
-@app.get("/game.html")
-async def read_game_html():
-    return FileResponse('static/game.html')
+# エディタページのルート（管理者用）
+@app.get("/editor", response_class=HTMLResponse)
+async def editor_page(request: Request):
+    # ここに管理者認証を追加することをお勧めします
+    # 例: セッションやトークンによる認証
+    return templates.TemplateResponse("editor.html", {
+        "request": request,
+        "is_admin": True  # 認証が完了している場合
+    })
 
-@app.get("/archive.html")
-async def read_archive_html():
-    return FileResponse('archive.html')
+# メインページ
+# 新着ストーリーを取得するAPIエンドポイント
+@app.get("/api/v1/stories/latest")
+async def get_latest_stories():
+    # メモリから最新のシナリオを取得（本番ではデータベースから取得）
+    latest_stories = list(scenarios_db.values())[-5:]  # 最新5件を取得
+    return {"stories": latest_stories}
 
-@app.get("/how-to-play.html")
-async def read_how_to_play_html():
-    return FileResponse('how-to-play.html')
+# トップページ - 新着ストーリーを表示
+@app.get("/", response_class=HTMLResponse)
+async def home_page(request: Request):
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>NovelGenPage - 新着ストーリー</title>
+        <link rel="stylesheet" href="/static/css/style.css">
+    </head>
+    <body>
+        <header>
+            <h1>NovelGenPage</h1>
+            <nav>
+                <a href="/">ホーム</a>
+                <a href="/stories">ストーリー一覧</a>
+                <a href="/editor" class="admin-link">エディタ（管理者用）</a>
+            </nav>
+        </header>
+        <main>
+            <h2>新着ストーリー</h2>
+            <div id="latest-stories" class="stories-grid">
+                <p>読み込み中...</p>
+            </div>
+        </main>
+        <script>
+            // 新着ストーリーを取得して表示
+            async function loadLatestStories() {
+                try {
+                    const response = await fetch('/api/v1/stories/latest');
+                    const data = await response.json();
+                    const container = document.getElementById('latest-stories');
+                    
+                    if (data.stories && data.stories.length > 0) {
+                        container.innerHTML = data.stories.map(story => `
+                            <div class="story-card">
+                                <h3>${story.title || '無題のストーリー'}</h3>
+                                <p>${story.scenes?.length || 0} シーン</p>
+                                <a href="/story/${story.id}" class="button">読む</a>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<p>新着ストーリーはありません</p>';
+                    }
+                } catch (error) {
+                    console.error('ストーリーの読み込みに失敗しました:', error);
+                    document.getElementById('latest-stories').innerHTML = 
+                        '<p>ストーリーの読み込みに失敗しました</p>';
+                }
+            }
+            
+            // ページ読み込み時にストーリーを読み込む
+            document.addEventListener('DOMContentLoaded', loadLatestStories);
+        </script>
+    </body>
+    </html>
+    """
 
-@app.get("/privacy-policy.html")
-async def read_privacy_policy_html():
-    return FileResponse('privacy-policy.html')
-
-@app.get("/scenario-editor.html")
-async def read_scenario_editor_html():
-    return FileResponse('scenario-editor.html')
-
-class StoryPrompt(BaseModel):
-    prompt: str
-
-@app.post("/api/generate")
-async def generate_story(prompt: StoryPrompt):
-    try:
-        # Gemini APIを使用してシナリオを生成
-        game_data = generate_scenario_from_prompt(prompt.prompt)
-        
-        # ゲームIDが設定されていない場合は生成
-        if not game_data.get("game_id"):
-            game_data['game_id'] = str(uuid.uuid4())
-        
-        # シナリオを保存し、アーカイブリストを更新
-        save_scenario(game_data)
-        
-        return JSONResponse(content=game_data, media_type="application/json; charset=utf-8")
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-
-class GameData(BaseModel):
-    game_id: str
+# データモデル
+class ImportRequest(BaseModel):
     title: str
-    theme: str
-    description: str
-    published: bool = False
-    characters: List[Dict[str, Any]] = Field(default_factory=list)
-    inventory: List[Dict[str, Any]] = Field(default_factory=list)
-    flags: Dict[str, Any] = Field(default_factory=dict)
-    steps: List[Dict[str, Any]]
+    content: str
 
-@app.post("/api/update_scenario")
-async def update_scenario(game_data: GameData):
-    game_id = game_data.game_id
-    file_path = f"games/{game_id}.json"
+class ContentItem(BaseModel):
+    type: str
+    value: str
 
-    if not os.path.exists(file_path):
-        return JSONResponse(content={"error": "Game not found"}, status_code=404)
+class Action(BaseModel):
+    text: str
+    next_scene_id: str
+    conditions: Optional[List[Dict]] = None
 
+class Scene(BaseModel):
+    id: str
+    title: str
+    content: List[ContentItem]
+    is_final: bool = False
+    actions: List[Action]
+
+class ScenarioResponse(BaseModel):
+    id: str
+    title: str
+    scenes: List[Scene]
+
+# シナリオをメモリに保存（本番ではデータベースを使用）
+scenarios_db = {}
+
+@app.post("/api/v1/scenarios/import", response_model=ScenarioResponse)
+async def import_scenario(request: ImportRequest):
     try:
-        # シナリオを保存し、アーカイブリストを更新
-        save_scenario(game_data.dict())
+        scenes = parse_markdown(request.content)
+        if not scenes:
+            raise ValueError("有効なシナリオが見つかりませんでした")
+            
+        scenario_id = f"scenario_{str(uuid.uuid4())[:8]}"
         
-        return JSONResponse(content={"message": "Scenario updated successfully"})
+        scenario = {
+            "id": scenario_id,
+            "title": request.title or "無題のシナリオ",
+            "scenes": [scene.dict() for scene in scenes]  # Pydanticモデルを辞書に変換
+        }
+        
+        # メモリに保存（本番ではデータベースに保存）
+        scenarios_db[scenario_id] = scenario
+        
+        return scenario
     except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        print(f"Error importing scenario: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
 
-@app.get("/api/stories")
-async def get_stories():
+@app.post("/api/v1/scenarios", response_model=ScenarioResponse)
+async def create_scenario(scenario: ScenarioResponse):
     try:
-        stories = get_archive_list()
-        return JSONResponse(content=stories)
+        scenario_dict = scenario.dict()
+        scenario_id = scenario_dict["id"]
+        scenarios_db[scenario_id] = scenario_dict
+        print(f"Scenario saved: {scenario_id}")
+        return scenario_dict
     except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        print(f"Error saving scenario: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to save scenario: {str(e)}")
 
-@app.get("/api/scenario/{game_id}")
-async def get_scenario(game_id: str):
-    file_path = f"games/{game_id}.json"
-    if not os.path.exists(file_path):
-        return JSONResponse(content={"error": "Game not found"}, status_code=404)
-    return FileResponse(file_path, media_type="application/json; charset=utf-8")
+@app.get("/api/v1/scenarios/{scenario_id}", response_model=ScenarioResponse)
+async def get_scenario(scenario_id: str):
+    if scenario_id not in scenarios_db:
+        raise HTTPException(status_code=404, detail="Scenario not found")
+    return scenarios_db[scenario_id]
 
-# このキャッチオールルートは、他のどのルートにも一致しない場合にのみ機能させるため、最後に配置することが重要です。
-# しかし、FastAPIでは定義順に評価されるため、意図しない動作を引き起こす可能性があります。
-# 代わりに、必要なHTMLページのルートを明示的に定義する方が安全です。
-# 以下のルートはコメントアウトまたは削除を推奨します。
-# @app.get("/{file_path:path}")
-# async def read_root_files(file_path: str):
-#     file = os.path.join(os.getcwd(), file_path)
-#     if os.path.exists(file) and file_path.endswith('.html'):
-#         return FileResponse(file)
-#     return JSONResponse(content={"error": "File not found"}, status_code=404)
-@app.get("/{file_path:path}")
-async def read_root_files(file_path: str):
-    file = os.path.join(os.getcwd(), file_path)
-    if os.path.exists(file) and file_path.endswith('.html'):
-        return FileResponse(file)
-    return JSONResponse(content={"error": "File not found"}, status_code=404)
+# マークダウンパーサー
+def parse_markdown(content: str) -> List[Scene]:
+    scenes = []
+    scene_blocks = re.split(r'\n##\s+', content.strip())
+    
+    if not scene_blocks:
+        return []
+        
+    # 最初のブロックはタイトルとして処理
+    first_block = scene_blocks[0].strip()
+    if first_block:
+        title = first_block.split('\n', 1)[0].strip('#').strip()
+        # 最初のシーンを追加
+        scenes.append(create_scene("1", title, first_block))
+    
+    # 残りのシーンを処理
+    for i, block in enumerate(scene_blocks[1:], 2):
+        scene_id = str(i)
+        title = block.split('\n', 1)[0].strip()
+        scenes.append(create_scene(scene_id, title, block))
+    
+    return scenes
+
+def create_scene(scene_id: str, title: str, content: str) -> Scene:
+    # 本文と選択肢を分離
+    parts = re.split(r'\n###+\s+選択肢\s*\n', content, flags=re.IGNORECASE)
+    body = parts[0].split('\n', 1)[1] if '\n' in parts[0] else ""
+    
+    # アクションを抽出
+    actions = []
+    if len(parts) > 1:
+        action_lines = parts[1].strip().split('\n')
+        for line in action_lines:
+            match = re.match(r'-\s*\[(.*?)\]\(scene:(\d+)\)', line.strip())
+            if match:
+                text, next_scene = match.groups()
+                actions.append({
+                    "text": text,
+                    "next_scene_id": f"scene_{next_scene}",
+                    "conditions": []
+                })
+    
+    return {
+        "id": f"scene_{scene_id}",
+        "title": title,
+        "content": [{"type": "text", "value": body.strip()}],
+        "is_final": not bool(actions),  # アクションがない場合は最終シーンとみなす
+        "actions": actions
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

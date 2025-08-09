@@ -15,12 +15,12 @@ export const CommonUI = {
         console.error(message);
     },
     
-    showSuccess(container, title, message, buttonText, buttonAction) {
+    showSuccess(container, title, message, buttonText, gameId) {
         container.innerHTML = `
             <div class="success-message">
                 <h3>✅ ${title}</h3>
                 <p>${message}</p>
-                <button class="button success-button" onclick="${buttonAction}">
+                <button class="button success-button play-now-button" data-game-id="${gameId}">
                     ${buttonText}
                 </button>
             </div>

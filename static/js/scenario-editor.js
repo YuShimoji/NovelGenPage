@@ -1,3 +1,5 @@
+import { api } from './api.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     // --- DOM要素のキャッシュ ---
     const scenarioListElement = document.getElementById('scenario-list');
@@ -86,7 +88,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </details>
                 </form>
             `;
-            formActionsElement.style.display = 'block';
         },
         renderDynamicElements: (data) => {
             const charContainer = document.getElementById('characters-container');
@@ -173,18 +174,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (e.target.tagName !== 'A') return;
             e.preventDefault();
             const gameId = e.target.dataset.gameId;
-            
-            // メインコンテンツをクリア
-            mainContentElement.innerHTML = '';
-            formContainerElement.innerHTML = '';
-            formActionsElement.style.display = 'none';
-            
+            mainContentElement.innerHTML = ''; // メインコンテンツをクリア
             ui.showLoading(mainContentElement);
             try {
                 const scenarioData = await api.getScenario(gameId);
                 currentScenario = JSON.parse(JSON.stringify(scenarioData)); // Deep copy
                 ui.renderScenarioForm(currentScenario);
                 ui.renderDynamicElements(currentScenario);
+                formActionsElement.style.display = 'block'; // アクションボタンを表示
             } catch (error) {
                 ui.showError(mainContentElement, `シナリオ詳細の取得に失敗しました: ${error.message}`);
             }
@@ -203,14 +200,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ui.showError(mainContentElement, `更新に失敗しました: ${error.message}`);
             }
         },
-        handleTestPlayClick: () => {
-            const currentData = collectFormData();
-            if (!currentData) {
-                alert('シナリオを読み込んでからテストプレイを開始してください。');
-                return;
+        handleFormActionsClick: (e) => {
+            if (e.target.id === 'test-play-button') {
+                const currentData = collectFormData();
+                if (!currentData) {
+                    alert('シナリオを読み込んでからテストプレイを開始してください。');
+                    return;
+                }
+                sessionStorage.setItem('testPlayScenario', JSON.stringify(currentData));
+                window.open('game.html', '_blank');
             }
-            sessionStorage.setItem('testPlayScenario', JSON.stringify(currentData));
-            window.open('game.html', '_blank');
         },
         handleFilterChange: () => {
             const checkedThemes = Array.from(document.querySelectorAll('.theme-filter:checked')).map(cb => cb.value);
@@ -227,11 +226,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (e.target.classList.contains('remove-btn')) {
                 e.target.closest('.dynamic-item').remove();
             }
-        },
-        handleFormActionsClick: (e) => {
-            if (e.target.id === 'test-play-button') {
-                eventHandlers.handleTestPlayClick();
-            }
         }
     };
 
@@ -240,8 +234,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 静的イベントリスナー
         scenarioListElement.addEventListener('click', eventHandlers.handleScenarioLinkClick);
         filterContainerElement.addEventListener('change', eventHandlers.handleFilterChange);
-        
-        // form-actionsにイベントデリゲーションを使用
         formActionsElement.addEventListener('click', eventHandlers.handleFormActionsClick);
 
         // 動的要素のためのイベントデリゲーション

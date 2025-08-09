@@ -28,8 +28,11 @@
                     <!-- ゲーム生成セクション -->
                     <section class="generator-section">
                         <h2>✨ 新しいゲームを生成</h2>
-                        <textarea id="prompt-input" placeholder="どんなアドベンチャーゲームを作りたいですか？&#10;例：「宇宙船で未知の惑星を探検する物語」"></textarea>
-                        <button id="generate-button">🚀 ゲームを生成する</button>
+                        <div class="generate-form">
+                            <input type="text" id="theme-input" placeholder="テーマ (例: 脱出ゲーム, ファンタジー)">
+                            <textarea id="keywords-input" placeholder="キーワード (例: 古い城, 魔法の剣, 囚われた姫)"></textarea>
+                            <button id="generate-button">🚀 ゲームを生成する</button>
+                        </div>
                         
                         <!-- 生成結果表示エリア -->
                         <div id="story-container" style="margin-top: 1rem;">
@@ -69,10 +72,6 @@
         </div>
     </div>
 
-    <script src="js/api.js"></script>
-    <script src="js/gameState.js" type="module"></script>
-    <script src="js/gameLogic.js" type="module"></script>
-    <script src="js/ui.js" type="module"></script>
-    <script src="js/main.js"></script>
+    <script type="module" src="/static/js/main.js"></script>
 </body>
 </html>
