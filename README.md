@@ -58,27 +58,3 @@
 
 5. ブラウザで `http://localhost:3000` を開く
 
-## ライセンス
-
-このプロジェクトは [MIT ライセンス](LICENSE) の下で公開されています。
-
-## 貢献方法
-
-バグレポートや機能リクエストは Issues へ、プルリクエストは大歓迎です。
-
-1. イシューを作成して変更を提案
-2. リポジトリをフォーク
-3. 機能ブランチを作成 (`git checkout -b feature/AmazingFeature`)
-4. 変更をコミット (`git commit -m 'Add some AmazingFeature'`)
-5. ブランチにプッシュ (`git push origin feature/AmazingFeature`)
-6. プルリクエストをオープン
-
-## 著者
-
-- [Your Name](https://github.com/your-username)
-
-## 謝辞
-
-- Google Gemini API チーム
-- FastAPI コミュニティ
-- すべてのコントリビューターの皆様
