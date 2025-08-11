@@ -672,8 +672,14 @@ class ScenarioEditor {
       const delta = this.quill.getContents();
       const markdown = window.MarkdownConverter.quillToMarkdown(delta);
       
-      // デバッグ用にコンソールに出力
-      console.log('Saving markdown:', markdown);
+      // タイトルを最初の見出しから抽出（見つからない場合はデフォルトタイトルを使用）
+      const titleMatch = markdown.match(/^#\s*(.+)$/m);
+      const title = titleMatch ? titleMatch[1].trim() : '無題のシナリオ';
+      
+      // ゲームIDを生成（既存のシナリオがあればそれを使用）
+      const scenarioId = this.currentScenarioId || `scenario_${Date.now()}`;
+      
+      console.log('Saving scenario:', { title, id: scenarioId });
       
       const response = await fetch('/api/v1/scenarios', {
         method: 'POST',
@@ -681,21 +687,30 @@ class ScenarioEditor {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
+          id: scenarioId,
+          title: title,
           content: markdown,
-          title: 'New Scenario',  // 必須フィールドの可能性あり
-          // 他の必須フィールドがあれば追加
+          description: markdown.split('\n').slice(0, 3).join('\n'), // 先頭3行を説明文として使用
+          last_updated: new Date().toISOString()
         })
       });
   
-      const responseData = await response.json();
-      console.log('Save response:', responseData);
-  
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Save failed:', { status: response.status, error: errorData });
+        throw new Error(errorData.detail || `保存に失敗しました (${response.status})`);
       }
   
-      alert('シナリオを保存しました');
+      const responseData = await response.json();
+      console.log('Save successful:', responseData);
+      
+      // 現在のシナリオIDを更新
+      if (responseData.id) {
+        this.currentScenarioId = responseData.id;
+      }
+      
+      this.showStatus('シナリオを保存しました', 'success');
       return responseData;
     } catch (error) {
       console.error('Save failed:', error);

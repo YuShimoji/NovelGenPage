@@ -31,14 +31,85 @@ async def editor_page(request: Request):
     })
 
 # メインページ
+# 全ストーリーを取得するAPIエンドポイント
+@app.get("/api/v1/stories")
+async def get_all_stories():
+    # メモリから全シナリオを取得（本番ではデータベースから取得）
+    all_stories = list(scenarios_db.values())
+    # 最終更新日でソート（新しい順）
+    all_stories.sort(key=lambda x: x.get('last_updated', ''), reverse=True)
+    return {"stories": all_stories}
+
 # 新着ストーリーを取得するAPIエンドポイント
 @app.get("/api/v1/stories/latest")
 async def get_latest_stories():
     # メモリから最新のシナリオを取得（本番ではデータベースから取得）
-    latest_stories = list(scenarios_db.values())[-5:]  # 最新5件を取得
+    all_stories = list(scenarios_db.values())
+    # 最終更新日でソート（新しい順）
+    all_stories.sort(key=lambda x: x.get('last_updated', ''), reverse=True)
+    latest_stories = all_stories[:5]  # 最新5件を取得
     return {"stories": latest_stories}
 
 # トップページ - 新着ストーリーを表示
+# ストーリー一覧ページ
+@app.get("/stories", response_class=HTMLResponse)
+async def stories_page(request: Request):
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>NovelGenPage - ストーリー一覧</title>
+        <link rel="stylesheet" href="/static/css/style.css">
+    </head>
+    <body>
+        <header>
+            <h1>NovelGenPage</h1>
+            <nav>
+                <a href="/">ホーム</a>
+                <a href="/stories" class="active">ストーリー一覧</a>
+                <a href="/editor" class="admin-link">エディタ（管理者用）</a>
+            </nav>
+        </header>
+        <main>
+            <h2>ストーリー一覧</h2>
+            <div id="stories-list" class="stories-grid">
+                <p>読み込み中...</p>
+            </div>
+        </main>
+        <script>
+            // ストーリー一覧を取得して表示
+            async function loadStories() {
+                try {
+                    const response = await fetch('/api/v1/stories');
+                    const data = await response.json();
+                    const container = document.getElementById('stories-list');
+                    
+                    if (data.stories && data.stories.length > 0) {
+                        container.innerHTML = data.stories.map(story => `
+                            <div class="story-card">
+                                <h3>${story.title || '無題のストーリー'}</h3>
+                                <p>${story.description || '説明なし'}</p>
+                                <p class="meta">最終更新: ${new Date(story.last_updated).toLocaleString()}</p>
+                                <a href="/story/${story.id}" class="button">読む</a>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<p>ストーリーがありません</p>';
+                    }
+                } catch (error) {
+                    console.error('ストーリーの読み込みに失敗しました:', error);
+                    document.getElementById('stories-list').innerHTML = 
+                        '<p>ストーリーの読み込みに失敗しました</p>';
+                }
+            }
+            
+            // ページ読み込み時にストーリーを読み込む
+            document.addEventListener('DOMContentLoaded', loadStories);
+        </script>
+    </body>
+    </html>
+    """
+
 @app.get("/", response_class=HTMLResponse)
 async def home_page(request: Request):
     return """
