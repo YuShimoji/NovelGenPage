@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="/static/css/editor.css">
   <!-- Quill エディタのスタイルシート -->
   <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <!-- Font Awesome アイコン -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     #editor-container {
       height: 100%;
@@ -114,38 +116,66 @@
       <pre id="debug-info" class="debug-info"></pre>
     </div>
     
+    <!-- エディタとプレビューのコンテナ -->
     <div class="editor-layout">
+      <!-- エディタパネル -->
       <div class="editor-panel">
-        <h2>エディタ</h2>
+        <h3><i class="fas fa-edit"></i> エディタ</h3>
         <!-- Quill エディタのツールバー -->
         <div id="toolbar-container">
+          <!-- 表示モード切り替え -->
+          <div class="view-mode-toggle">
+            <button class="view-mode-btn active" data-mode="split">
+              <i class="fas fa-columns"></i> 分割表示
+            </button>
+            <button class="view-mode-btn" data-mode="editor">
+              <i class="fas fa-edit"></i> エディタ
+            </button>
+            <button class="view-mode-btn" data-mode="preview">
+              <i class="fas fa-eye"></i> プレビュー
+            </button>
+          </div>
+          
+          <div class="toolbar-divider"></div>
+          
+          <!-- 書式設定ツールバー -->
           <span class="ql-formats">
             <select class="ql-header">
+              <option value="">本文</option>
               <option value="1">見出し1</option>
               <option value="2">見出し2</option>
               <option value="3">見出し3</option>
-              <option selected>通常テキスト</option>
             </select>
-            <button class="ql-bold"></button>
-            <button class="ql-italic"></button>
-            <button class="ql-underline"></button>
-            <button class="ql-strike"></button>
           </span>
+          
           <span class="ql-formats">
-            <button class="ql-list" value="ordered"></button>
-            <button class="ql-list" value="bullet"></button>
+            <button class="ql-bold" title="太字 (Ctrl+B)"></button>
+            <button class="ql-italic" title="斜体 (Ctrl+I)"></button>
+            <button class="ql-underline" title="下線 (Ctrl+U)"></button>
+            <button class="ql-strike" title="取り消し線"></button>
           </span>
+          
           <span class="ql-formats">
-            <button class="ql-blockquote"></button>
-            <button class="ql-code-block"></button>
+            <button class="ql-list" value="ordered" title="番号付きリスト"></button>
+            <button class="ql-list" value="bullet" title="箇条書き"></button>
+            <button class="ql-blockquote" title="引用"></button>
+            <button class="ql-code-block" title="コードブロック"></button>
           </span>
+          
           <span class="ql-formats">
-            <button class="ql-link"></button>
-            <button class="ql-image"></button>
+            <button class="ql-link" title="リンク"></button>
+            <button class="ql-image" title="画像を挿入"></button>
           </span>
+          
+          <div class="toolbar-divider"></div>
+          
           <span class="ql-formats">
-            <button class="ql-insert-scene">シーン</button>
-            <button class="ql-insert-choice">選択肢</button>
+            <button class="ql-insert-scene" title="シーンを挿入">
+              <i class="fas fa-scroll"></i> シーン
+            </button>
+            <button class="ql-insert-choice" title="選択肢を挿入">
+              <i class="fas fa-list-ul"></i> 選択肢
+            </button>
           </span>
         </div>
         
@@ -196,20 +226,34 @@
 宝箱を開けずにその場を離れました。何も起こりませんでしたが、何か後ろ髪を引かれる思いがします。</textarea>
       </div>
       
-      <div class="preview-panel">
-        <h2>プレビュー</h2>
-        <div id="scenario-preview"></div>
+      <!-- エディタパネル -->
+      <div id="editor-container" class="editor-panel">
+        <div id="editor-toolbar">
+          <button id="bold-btn" class="ql-bold" title="太字"><i class="fas fa-bold"></i></button>
+          <button id="italic-btn" class="ql-italic" title="斜体"><i class="fas fa-italic"></i></button>
+          <button id="header-btn" class="ql-header" value="1" title="見出し"><i class="fas fa-heading"></i></button>
+          <button id="list-btn" class="ql-list" value="ordered" title="番号付きリスト"><i class="fas fa-list-ol"></i></button>
+          <button id="bullet-btn" class="ql-list" value="bullet" title="箇条書き"><i class="fas fa-list-ul"></i></button>
+          <button id="link-btn" class="ql-link" title="リンク"><i class="fas fa-link"></i></button>
+          <button id="image-btn" class="ql-image" title="画像を挿入"><i class="fas fa-image"></i></button>
+          <button id="scene-btn" title="シーンを挿入"><i class="fas fa-scroll"></i> シーン</button>
+          <button id="choice-btn" title="選択肢を挿入"><i class="fas fa-list-ul"></i> 選択肢</button>
+        </div>
+        <div id="editor"></div>
       </div>
+      
+      <!-- プレビューパネル -->
+      <div id="preview-panel" class="preview-panel">
+        <h3><i class="fas fa-eye"></i> プレビュー</h3>
+        <div id="preview-content" class="preview-content"></div>
       </div>
     </div>
   </div>
   
   <!-- スクリプトの読み込み -->
-  <!-- Quill エディタのスクリプト -->
+  <!-- 必要なライブラリを読み込み -->
   <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-  <!-- marked.js の読み込み -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <!-- DOMPurify の読み込み -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.3/purify.min.js"></script>
   
   <!-- カスタムスクリプト -->

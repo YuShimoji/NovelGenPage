@@ -1,13 +1,127 @@
 // スクリプトが読み込まれたことを確認
 console.log('editor.js が読み込まれました');
 
-// グローバルなマークダウンコンバーターを参照
-const Quill = window.Quill;
+// グローバルスコープにエディタを登録
+window.NovelGenPage = window.NovelGenPage || {};
 
-if (!Quill) {
-  console.error('Quill が読み込まれていません');
-  throw new Error('Quill エディタの読み込みに失敗しました');
+// 必要なライブラリが読み込まれているか確認
+function checkDependencies() {
+  if (typeof Quill === 'undefined') {
+    console.error('Quill エディタが読み込まれていません');
+    return false;
+  }
+  
+  if (typeof markdownToHtml !== 'function') {
+    console.error('markdownToHtml 関数が見つかりません');
+    return false;
+  }
+  
+  return true;
 }
+
+// エディタの初期化関数
+function initializeEditor() {
+  if (!checkDependencies()) {
+    console.error('必要なライブラリが読み込まれていません');
+    return;
+  }
+  
+  // エディタ要素を取得
+  const editorElement = document.getElementById('editor');
+  if (!editorElement) {
+    console.error('エディタ要素が見つかりません');
+    return;
+  }
+  
+  try {
+    console.log('エディタを初期化します');
+    
+    // ツールバーボタンの設定
+    const toolbarOptions = [
+      ['bold', 'italic', 'underline', 'strike'],
+      ['blockquote', 'code-block'],
+      [{ 'header': [1, 2, 3, false] }],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link', 'image'],
+      ['clean']
+    ];
+    
+    // Quillエディタの初期化
+    const quill = new Quill(editorElement, {
+      theme: 'snow',
+      modules: {
+        toolbar: {
+          container: toolbarOptions,
+          handlers: {
+            'image': function() {
+              // 画像アップロードの処理
+              const input = document.createElement('input');
+              input.setAttribute('type', 'file');
+              input.setAttribute('accept', 'image/*');
+              input.click();
+              
+              input.onchange = function() {
+                const file = input.files[0];
+                if (!file) return;
+                
+                // ここで画像アップロード処理を実装
+                console.log('画像をアップロード:', file.name);
+                // 仮の画像URLを挿入
+                const range = quill.getSelection();
+                quill.insertEmbed(range.index, 'image', 'https://via.placeholder.com/400x200');
+              };
+            }
+          }
+        }
+      },
+      placeholder: 'ここにテキストを入力...',
+    });
+    
+    // プレビューの更新
+    function updatePreview() {
+      // プレビュー要素は updatePreview メソッド内で動的に取得するように変更
+      const previewElement = document.getElementById('preview-content');
+      if (!previewElement) {
+        console.warn('プレビュー要素が見つかりません');
+        return;
+      }
+      
+      try {
+        const delta = quill.getContents();
+        const text = quill.getText();
+        previewElement.innerHTML = markdownToHtml(text);
+      } catch (error) {
+        console.error('プレビューの更新中にエラーが発生しました:', error);
+      }
+    }
+    
+    // エディタの変更を監視してプレビューを更新
+    quill.on('text-change', updatePreview);
+    
+    // 初期プレビューを更新
+    setTimeout(updatePreview, 100);
+    
+    console.log('エディタの初期化が完了しました');
+    return quill;
+  } catch (error) {
+    console.error('エディタの初期化中にエラーが発生しました:', error);
+    return null;
+  }
+}
+
+// ドキュメントの読み込みが完了したら初期化を実行
+function init() {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      window.NovelGenPage.editor = initializeEditor();
+    });
+  } else {
+    window.NovelGenPage.editor = initializeEditor();
+  }
+}
+
+// 初期化を開始
+init();
 
 // デバッグ用のログ関数
 function debugLog(message, data) {
@@ -189,104 +303,101 @@ class ScenarioEditor {
         throw new Error('Quill ライブラリが正しくロードされていません');
       }
 
-      // ツールバーのカスタマイズ
-      const toolbarOptions = [
-        ['bold', 'italic', 'underline', 'strike'],
-        ['blockquote', 'code-block'],
-        [{ 'header': 1 }, { 'header': 2 }],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        ['link', 'image'],
-        ['insert-scene', 'insert-choice']
-      ];
+      // カスタムツールバーボタンのアイコンを設定
+      const icons = Quill.import('ui/icons');
+      icons['insert-scene'] = '<i class="fas fa-scroll"></i>';
+      icons['insert-choice'] = '<i class="fas fa-list-ul"></i>';
       
-      // Quill エディタのオプション
+      // エディタのオプション
       const options = {
         theme: 'snow',
         modules: {
           toolbar: {
-            container: toolbarOptions,
+            container: '#toolbar-container',
             handlers: {
-              'insert-scene': () => this.insertScene(),
-              'insert-choice': () => this.insertChoice(),
+              'insert-scene': this.insertScene.bind(this),
+              'insert-choice': this.insertChoice.bind(this),
               'image': this.handleImageUpload.bind(this)
             }
           },
           clipboard: {
             matchVisual: false
+          },
+          keyboard: {
+            bindings: {
+              // カスタムキーバインディング
+              'bold': {
+                key: 'b',
+                shortKey: true,
+                handler: (range, context) => {
+                  this.quill.format('bold', !this.quill.getFormat(range.index, range.length).bold);
+                }
+              },
+              'italic': {
+                key: 'i',
+                shortKey: true,
+                handler: (range, context) => {
+                  this.quill.format('italic', !this.quill.getFormat(range.index, range.length).italic);
+                }
+              },
+              'underline': {
+                key: 'u',
+                shortKey: true,
+                handler: (range, context) => {
+                  this.quill.format('underline', !this.quill.getFormat(range.index, range.length).underline);
+                }
+              }
+            }
           }
         },
         placeholder: 'ここにシナリオを入力してください...',
         formats: [
-          'bold', 'italic', 'underline', 'strike',
-          'blockquote', 'code-block',
-          'header', 'list',
-          'link', 'image',
+          'header', 'bold', 'italic', 'underline', 'strike', 'blockquote',
+          'list', 'bullet', 'indent', 'link', 'image', 'code-block',
           'scene', 'choice'
         ]
       };
       
       // エディタを初期化
-      try {
-        this.quill = new Quill(container, options);
-        
-        // カスタムボタンのスタイルを設定
-        try {
-          const icons = Quill.import('ui/icons');
-          if (icons) {
-            icons['insert-scene'] = 'シーン';
-            icons['insert-choice'] = '選択肢';
-          }
-        } catch (iconError) {
-          console.warn('カスタムアイコンの設定に失敗しました:', iconError);
-        }
+      this.quill = new Quill(container, options);
       
-      } catch (quillError) {
-        console.error('Quill エディタの初期化に失敗しました:', quillError);
-        throw new Error('エディタの初期化に失敗しました: ' + quillError.message);
-      }
+      // 初期表示モードを設定
+      this.initializeViewMode();
       
       // 初期コンテンツがあれば読み込む
-      try {
-        if (this.textarea && this.textarea.value) {
-          this.importScenario(this.textarea.value);
-        } else if (container.querySelector('.ql-editor')) {
-          // 初期コンテンツが空の場合はプレースホルダーを表示
-          container.querySelector('.ql-editor').setAttribute('data-placeholder', 'ここにシナリオを入力してください...');
-        }
-      } catch (contentError) {
-        console.error('初期コンテンツの読み込みに失敗しました:', contentError);
-        // エラーがあっても処理は続行
+      if (this.textarea && this.textarea.value) {
+        this.importScenario(this.textarea.value);
       }
       
       // 変更を監視してテキストエリアを更新
-      try {
-        this.quill.on('text-change', () => {
-          if (this.textarea && this.quill) {
-            try {
-              // MarkdownConverter が利用可能か確認
-              if (!window.MarkdownConverter || typeof window.MarkdownConverter.quillToMarkdown !== 'function') {
-                console.warn('MarkdownConverter が利用できません。更新をスキップします。');
-                return;
-              }
-              
-              const delta = this.quill.getContents();
-              const markdown = window.MarkdownConverter.quillToMarkdown(delta);
-              this.textarea.value = markdown;
-              
-              // プレビューを更新
-              this.updatePreview();
-            } catch (updateError) {
-              console.error('コンテンツの更新中にエラーが発生しました:', updateError);
+      this.quill.on('text-change', () => {
+        if (this.textarea && this.quill) {
+          try {
+            // MarkdownConverter が利用可能か確認
+            if (!window.MarkdownConverter || typeof window.MarkdownConverter.quillToMarkdown !== 'function') {
+              console.warn('MarkdownConverter が利用できません。更新をスキップします。');
+              return;
             }
+            
+            const delta = this.quill.getContents();
+            const markdown = window.MarkdownConverter.quillToMarkdown(delta);
+            this.textarea.value = markdown;
+            
+            // プレビューを更新
+            this.updatePreview();
+            
+          } catch (error) {
+            console.error('テキストの変換中にエラーが発生しました:', error);
+            this.showError('テキストの更新中にエラーが発生しました');
           }
-        });
-        
-        debugLog('Quill エディタの初期化が完了しました');
-        
-      } catch (eventError) {
-        console.error('イベントリスナーの設定中にエラーが発生しました:', eventError);
-        // イベントリスナーのエラーは致命的ではないので処理を続行
-      }
+        }
+      });
+      
+      // 初期プレビューを更新
+      this.updatePreview();
+      
+      debugLog('Quill エディタの初期化が完了しました');
+      return this.quill;
       
     } catch (error) {
       const errorMessage = 'Quill エディタの初期化中にエラーが発生しました: ' + error.message;
@@ -391,17 +502,22 @@ class ScenarioEditor {
   
   // イベントリスナーを設定
   initializeEventListeners() {
+    // 保存ボタン
+    document.getElementById('save-button')?.addEventListener('click', () => this.saveScenario());
+    
+    // インポートボタン
+    document.getElementById('import-button')?.addEventListener('click', async () => {
+      const textarea = document.getElementById('scenario-editor');
+      if (textarea) {
+        await this.importScenario(textarea.value);
+      }
+    });
+    
     // エディタの変更を監視してプレビューを更新
     if (this.quill) {
       this.quill.on('text-change', () => {
         this.updatePreview();
       });
-      
-      // 初期プレビューを更新
-      setTimeout(() => this.updatePreview(), 100);
-    } else {
-      console.error('Quill エディタが初期化されていません');
-      this.showError('エディタの初期化に失敗しました。ページを再読み込みしてください。');
     }
     
     // 保存ボタン
@@ -417,6 +533,78 @@ class ScenarioEditor {
     } else {
       console.warn('インポートボタンが見つかりません');
     }
+    
+    // 表示モード切り替えボタン
+    document.querySelectorAll('.view-mode-btn').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const mode = e.currentTarget.dataset.mode;
+        this.setViewMode(mode);
+      });
+    });
+    
+    // キーボードショートカット
+    document.addEventListener('keydown', (e) => {
+      // Ctrl+1: 分割表示
+      if (e.ctrlKey && e.key === '1') {
+        e.preventDefault();
+        this.setViewMode('split');
+      }
+      // Ctrl+2: エディタのみ
+      else if (e.ctrlKey && e.key === '2') {
+        e.preventDefault();
+        this.setViewMode('editor');
+      }
+      // Ctrl+3: プレビューのみ
+      else if (e.ctrlKey && e.key === '3') {
+        e.preventDefault();
+        this.setViewMode('preview');
+      }
+    });
+    
+    // ローカルストレージから前回の表示モードを復元
+    const savedViewMode = localStorage.getItem('editorViewMode') || 'split';
+    this.setViewMode(savedViewMode);
+  }
+  
+  // 表示モードを設定
+  setViewMode(mode) {
+    const editorPanel = document.querySelector('.editor-panel');
+    const previewPanel = document.querySelector('.preview-panel');
+    const buttons = document.querySelectorAll('.view-mode-btn');
+    
+    // すべてのボタンからactiveクラスを削除
+    buttons.forEach(btn => btn.classList.remove('active'));
+    
+    // 選択されたボタンにactiveクラスを追加
+    const activeButton = document.querySelector(`.view-mode-btn[data-mode="${mode}"]`);
+    if (activeButton) {
+      activeButton.classList.add('active');
+    }
+    
+    // 表示モードに応じてパネルの表示を切り替え
+    switch (mode) {
+      case 'editor':
+        editorPanel.style.display = 'block';
+        previewPanel.style.display = 'none';
+        break;
+      case 'preview':
+        editorPanel.style.display = 'none';
+        previewPanel.style.display = 'block';
+        break;
+      case 'split':
+      default:
+        editorPanel.style.display = 'block';
+        previewPanel.style.display = 'block';
+        editorPanel.style.flex = '1';
+        previewPanel.style.flex = '1';
+        break;
+    }
+    
+    // リサイズイベントを発火してレイアウトを更新
+    window.dispatchEvent(new Event('resize'));
+    
+    // ローカルストレージに表示モードを保存
+    localStorage.setItem('editorViewMode', mode);
   }
   
   // ステータスを表示
@@ -524,34 +712,72 @@ class ScenarioEditor {
     }
   }
 
+  // 表示モードを初期化
+  initializeViewMode() {
+    // 保存された表示モードを取得（デフォルトは分割表示）
+    const savedViewMode = localStorage.getItem('editorViewMode') || 'split';
+    this.setViewMode(savedViewMode);
+    
+    // 表示モード切り替えボタンのイベントリスナーを設定
+    document.querySelectorAll('.view-mode-btn').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const mode = e.currentTarget.dataset.mode;
+        this.setViewMode(mode);
+      });
+    });
+    
+    // キーボードショートカットの設定
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey) {
+        switch (e.key) {
+          case '1':
+            this.setViewMode('split');
+            e.preventDefault();
+            break;
+          case '2':
+            this.setViewMode('editor');
+            e.preventDefault();
+            break;
+          case '3':
+            this.setViewMode('preview');
+            e.preventDefault();
+            break;
+        }
+      }
+    });
+  }
+  
   // プレビューを更新
   updatePreview() {
     debugLog('updatePreview: プレビューの更新を開始します');
     
-    if (!this.quill || !this.preview) {
-      debugLog('エラー: Quillエディタまたはプレビュー要素が初期化されていません');
+    // プレビュー要素を取得
+    const previewElement = document.getElementById('preview-content');
+    
+    if (!this.quill || !previewElement) {
+      debugLog('エラー: Quillエディタまたはプレビュー要素が見つかりません');
       return;
     }
     
-    // MarkdownConverter が利用可能か確認
-    if (!window.MarkdownConverter || typeof window.MarkdownConverter.quillToMarkdown !== 'function') {
-      console.error('MarkdownConverter が正しく読み込まれていません');
-      this.preview.innerHTML = '<p class="error-message">Markdownコンバーターの読み込みに失敗しました。ページを再読み込みしてください。</p>';
+    // markdownToHtml 関数が利用可能か確認
+    if (typeof window.markdownToHtml !== 'function') {
+      console.error('markdownToHtml 関数が正しく読み込まれていません');
+      previewElement.innerHTML = '<p class="error-message">マークダウンコンバーターの読み込みに失敗しました。ページを再読み込みしてください。</p>';
       return;
     }
     
     try {
       // エディタの内容をマークダウンに変換
       const delta = this.quill.getContents();
-      const markdown = window.MarkdownConverter.quillToMarkdown(delta);
-      debugLog('updatePreview: マークダウンに変換しました', markdown);
+      const markdown = this.quill.getText();
+      debugLog('updatePreview: マークダウンを取得しました', markdown);
       
       // マークダウンをHTMLに変換
-      const html = window.MarkdownConverter.markdownToHtml(markdown);
+      const html = window.markdownToHtml(markdown);
       debugLog('updatePreview: HTMLに変換しました', html);
       
       // プレビューを更新
-      this.preview.innerHTML = html || '<p class="empty-preview">プレビューが表示されます</p>';
+      previewElement.innerHTML = html || '<p class="empty-preview">プレビューが表示されます</p>';
       
       // プレビュー内のリンクにイベントリスナーを設定
       if (typeof this.setupPreviewLinks === 'function') {
@@ -562,36 +788,39 @@ class ScenarioEditor {
       if (typeof this.setupActionButtons === 'function') {
         this.setupActionButtons();
       }
+      
+      // アクションボタンの設定
+      const actionButtons = this.preview ? this.preview.querySelectorAll('.action-button') : [];
+      
+      actionButtons.forEach(button => {
+        // 既存のイベントリスナーを削除
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+        
+        // 新しいイベントリスナーを追加
+        newButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          const targetScene = newButton.getAttribute('href');
+          
+          if (targetScene && targetScene.startsWith('#')) {
+            const targetElement = document.querySelector(targetScene);
+            if (targetElement) {
+              targetElement.scrollIntoView({ behavior: 'smooth' });
+              targetElement.classList.add('highlight');
+              setTimeout(() => {
+                targetElement.classList.remove('highlight');
+              }, 2000);
+            }
+          }
+        });
+      });
+      
     } catch (error) {
       console.error('プレビューの更新中にエラーが発生しました:', error);
       if (this.preview) {
         this.preview.innerHTML = '<p class="error-message">プレビューの表示中にエラーが発生しました。ページを再読み込みしてください。</p>';
       }
     }
-    const actionButtons = this.preview ? this.preview.querySelectorAll('.action-button') : [];
-    
-    actionButtons.forEach(button => {
-      // 既存のイベントリスナーを削除
-      const newButton = button.cloneNode(true);
-      button.parentNode.replaceChild(newButton, button);
-      
-      // 新しいイベントリスナーを追加
-      newButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        const targetScene = newButton.getAttribute('href');
-        
-        if (targetScene && targetScene.startsWith('#')) {
-          const targetElement = document.querySelector(targetScene);
-          if (targetElement) {
-            targetElement.scrollIntoView({ behavior: 'smooth' });
-            targetElement.classList.add('highlight');
-            setTimeout(() => {
-              targetElement.classList.remove('highlight');
-            }, 2000);
-          }
-        }
-      });
-    });
   }
   
   // シナリオをインポート
@@ -628,41 +857,34 @@ class ScenarioEditor {
       
       // Quillが初期化されているか確認
       if (!this.quill) {
-        throw new Error('エディタが初期化されていません');
+        throw new Error('Quillエディタが初期化されていません');
       }
       
-      // MarkdownConverter が利用可能か確認
-      if (!window.MarkdownConverter || typeof window.MarkdownConverter.markdownToDelta !== 'function') {
-        throw new Error('Markdownコンバーターが利用できません');
+      // markdownToHtml 関数が利用可能か確認
+      if (typeof window.markdownToHtml !== 'function') {
+        throw new Error('マークダウンコンバーターが利用できません');
       }
       
-      // マークダウンをQuillのDelta形式に変換
-      debugLog('マークダウンをDelta形式に変換します...');
-      const delta = window.MarkdownConverter.markdownToDelta(markdown);
+      // マークダウンをHTMLに変換
+      const html = window.markdownToHtml(markdown);
       
-      // エディタにコンテンツを設定
-      debugLog('エディタにコンテンツを設定します...');
-      this.quill.setContents(delta);
+      // エディタにHTMLを設定
+      const delta = this.quill.clipboard.convert(html);
+      this.quill.setContents(delta, 'silent');
       
       // プレビューを更新
       this.updatePreview();
       
-      this.showStatus('シナリオをインポートしました', 'success');
       debugLog('シナリオのインポートが完了しました');
-      
-      return delta;
-      
     } catch (error) {
       const errorMessage = 'シナリオのインポート中にエラーが発生しました: ' + error.message;
       console.error(errorMessage, error);
-      this.showStatus('エラー: ' + error.message, 'error');
+      this.showStatus(errorMessage, 'error');
       
-      // エラーの詳細をコンソールに出力
-      if (error.stack) {
-        console.error('スタックトレース:', error.stack);
-      }
+      // スタックトレースをコンソールに出力
+      console.error('スタックトレース:', error);
       
-      return null;
+      throw error;
     }
   }
   
@@ -804,22 +1026,17 @@ function initialize() {
   
   try {
     // エディタを初期化
-    window.scenarioEditor = new ScenarioEditor();
-    console.log('シナリオエディタの初期化が完了しました');
-    
-    // 初期コンテンツがあれば読み込む
-    const textarea = document.getElementById('scenario-editor');
-    if (textarea && textarea.value) {
-      window.scenarioEditor.importScenario(textarea.value);
+    window.scenarioEditor = initializeEditor();
+    if (window.scenarioEditor) {
+      console.log('シナリオエディタの初期化が完了しました');
     }
-    
   } catch (error) {
     console.error('エディタの初期化中にエラーが発生しました:', error);
     showError('エディタの初期化中にエラーが発生しました: ' + error.message);
   }
 }
 
-// DOMの読み込みが完了したら初期化を開始
+// DOMの読み込みが完了したら初期化
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initialize);
 } else {
