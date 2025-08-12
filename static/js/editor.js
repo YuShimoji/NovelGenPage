@@ -4,108 +4,141 @@ console.log('editor.js が読み込まれました');
 // グローバルスコープにエディタを登録
 window.NovelGenPage = window.NovelGenPage || {};
 
-// 必要なライブラリが読み込まれているか確認
-function checkDependencies() {
-  if (typeof Quill === 'undefined') {
-    console.error('Quill エディタが読み込まれていません');
-    return false;
+// デバッグ用のログ関数
+function debugLog(message, data = null) {
+  if (window.NovelGenPage.debug) {
+    console.log(`[DEBUG] ${message}`, data || '');
+  }
+}
+
+// エラーメッセージを表示する関数
+function showError(message, error = null) {
+  console.error(message, error || '');
+  
+  // エラーを画面上に表示
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'error-message';
+  errorDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px;
+    background-color: #ffebee;
+    border: 1px solid #ef9a9a;
+    border-radius: 4px;
+    color: #c62828;
+    z-index: 10000;
+    max-width: 400px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  `;
+  
+  errorDiv.textContent = message;
+  
+  if (error) {
+    const details = document.createElement('div');
+    details.style.marginTop = '10px';
+    details.style.fontSize = '0.9em';
+    details.textContent = error.toString();
+    errorDiv.appendChild(details);
   }
   
-  if (typeof markdownToHtml !== 'function') {
-    console.error('markdownToHtml 関数が見つかりません');
+  document.body.appendChild(errorDiv);
+  
+  // 5秒後にエラーメッセージを削除
+  setTimeout(() => {
+    errorDiv.style.opacity = '0';
+    setTimeout(() => errorDiv.remove(), 300);
+  }, 5000);
+}
+
+// 必要なライブラリが読み込まれているか確認
+function checkDependencies() {
+  const required = {
+    'Quill': () => typeof Quill !== 'undefined',
+    'markdownToHtml': () => typeof markdownToHtml === 'function'
+  };
+  
+  const missing = [];
+  
+  // 不足している依存関係をチェック
+  for (const [name, check] of Object.entries(required)) {
+    if (!check()) {
+      console.error(`必要なライブラリが読み込まれていません: ${name}`);
+      missing.push(name);
+    }
+  }
+  
+  // 不足している依存関係がある場合はエラーを表示
+  if (missing.length > 0) {
+    showError(`次の必要なライブラリが読み込まれていません: ${missing.join(', ')}`);
     return false;
   }
   
   return true;
 }
 
-// エディタの初期化関数
+// エディタを初期化する関数
 function initializeEditor() {
-  if (!checkDependencies()) {
-    console.error('必要なライブラリが読み込まれていません');
-    return;
-  }
-  
-  // エディタ要素を取得
-  const editorElement = document.getElementById('editor');
-  if (!editorElement) {
-    console.error('エディタ要素が見つかりません');
-    return;
-  }
-  
   try {
-    console.log('エディタを初期化します');
+    console.log('エディタの初期化を開始します...');
     
-    // ツールバーボタンの設定
-    const toolbarOptions = [
-      ['bold', 'italic', 'underline', 'strike'],
-      ['blockquote', 'code-block'],
-      [{ 'header': [1, 2, 3, false] }],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      ['link', 'image'],
-      ['clean']
-    ];
+    // 必要な要素が存在するか確認
+    const editorContainer = document.getElementById('editor-container');
+    const previewElement = document.getElementById('scenario-preview');
     
-    // Quillエディタの初期化
-    const quill = new Quill(editorElement, {
-      theme: 'snow',
-      modules: {
-        toolbar: {
-          container: toolbarOptions,
-          handlers: {
-            'image': function() {
-              // 画像アップロードの処理
-              const input = document.createElement('input');
-              input.setAttribute('type', 'file');
-              input.setAttribute('accept', 'image/*');
-              input.click();
-              
-              input.onchange = function() {
-                const file = input.files[0];
-                if (!file) return;
-                
-                // ここで画像アップロード処理を実装
-                console.log('画像をアップロード:', file.name);
-                // 仮の画像URLを挿入
-                const range = quill.getSelection();
-                quill.insertEmbed(range.index, 'image', 'https://via.placeholder.com/400x200');
-              };
-            }
-          }
-        }
-      },
-      placeholder: 'ここにテキストを入力...',
-    });
+    if (!editorContainer) {
+      throw new Error('エディタのコンテナが見つかりません');
+    }
     
-    // プレビューの更新
-    function updatePreview() {
-      // プレビュー要素は updatePreview メソッド内で動的に取得するように変更
-      const previewElement = document.getElementById('preview-content');
-      if (!previewElement) {
-        console.warn('プレビュー要素が見つかりません');
-        return;
-      }
-      
-      try {
-        const delta = quill.getContents();
-        const text = quill.getText();
-        previewElement.innerHTML = markdownToHtml(text);
-      } catch (error) {
-        console.error('プレビューの更新中にエラーが発生しました:', error);
+    if (!previewElement) {
+      console.warn('プレビュー要素が見つかりません。プレビュー機能は無効になります。');
+    }
+    
+    // 必要なライブラリが読み込まれているか確認
+    if (!checkDependencies()) {
+      throw new Error('必要なライブラリが読み込まれていません');
+    }
+    
+    // エディタのインスタンスを作成
+    const editor = new ScenarioEditor();
+    
+    // グローバルに公開（デバッグ用）
+    window.NovelGenPage = window.NovelGenPage || {};
+    window.NovelGenPage.editor = editor;
+    window.editor = editor; // 後方互換性のため
+    
+    // 初期コンテンツを読み込む
+    const initialContent = document.getElementById('initial-content');
+    if (initialContent && initialContent.value.trim()) {
+      console.log('初期コンテンツを読み込みます...');
+      editor.importScenario(initialContent.value);
+    } else if (editor.textarea && editor.textarea.value.trim()) {
+      console.log('テキストエリアからコンテンツを読み込みます...');
+      editor.importScenario(editor.textarea.value);
+    } else {
+      console.log('初期コンテンツが空です');
+      // 空のコンテンツでプレビューを更新
+      if (previewElement) {
+        previewElement.innerHTML = '<p class="empty-preview">プレビューが表示されます</p>';
       }
     }
     
-    // エディタの変更を監視してプレビューを更新
-    quill.on('text-change', updatePreview);
-    
-    // 初期プレビューを更新
-    setTimeout(updatePreview, 100);
-    
     console.log('エディタの初期化が完了しました');
-    return quill;
+    return editor;
   } catch (error) {
     console.error('エディタの初期化中にエラーが発生しました:', error);
-    return null;
+    
+    // エラーメッセージを表示
+    const statusElement = document.getElementById('editor-status');
+    if (statusElement) {
+      statusElement.textContent = `エラー: ${error.message}`;
+      statusElement.className = 'status-message status-error';
+    } else {
+      // ステータス要素がなければアラートで表示
+      alert(`エディタの初期化中にエラーが発生しました: ${error.message}`);
+    }
+    
+    throw error;
   }
 }
 
@@ -118,48 +151,6 @@ function init() {
   } else {
     window.NovelGenPage.editor = initializeEditor();
   }
-}
-
-// 初期化を開始
-init();
-
-// デバッグ用のログ関数
-function debugLog(message, data) {
-  if (window.debug && window.debug.log) {
-    window.debug.log(message, data);
-  } else if (console && console.log) {
-    console.log(`[DEBUG] ${message}`, data || '');
-  }
-}
-
-// エラーメッセージを表示する関数
-function showError(message, error) {
-  console.error(message, error);
-  
-  const errorElement = document.createElement('div');
-  errorElement.className = 'error-message';
-  errorElement.style.padding = '10px';
-  errorElement.style.margin = '10px 0';
-  errorElement.style.border = '1px solid #f5c6cb';
-  errorElement.style.borderRadius = '4px';
-  errorElement.style.backgroundColor = '#f8d7da';
-  errorElement.style.color = '#721c24';
-  
-  errorElement.innerHTML = `
-    <strong>エラーが発生しました:</strong>
-    <p>${message}</p>
-    ${error ? `<pre style="white-space: pre-wrap; font-size: 12px;">${error.stack || error}</pre>` : ''}
-  `;
-  
-  const statusElement = document.getElementById('editor-status');
-  if (statusElement) {
-    statusElement.innerHTML = '';
-    statusElement.appendChild(errorElement);
-  } else {
-    document.body.insertBefore(errorElement, document.body.firstChild);
-  }
-  
-  return errorElement;
 }
 
 // カスタムブロックの定義
@@ -258,6 +249,13 @@ function importScenario(markdownText) {
 class ScenarioEditor {
   constructor() {
     try {
+      debugLog('ScenarioEditor を初期化しています...');
+      
+      // 必要なライブラリが読み込まれているか確認（グローバルスコープの関数を呼び出す）
+      if (!checkDependencies()) {
+        throw new Error('必要なライブラリが読み込まれていません');
+      }
+      
       // 要素の初期化
       this.initializeElements();
       
@@ -269,8 +267,12 @@ class ScenarioEditor {
       
       // 初期プレビューを更新
       setTimeout(() => this.updatePreview(), 100);
+      
+      debugLog('ScenarioEditor の初期化が完了しました');
     } catch (error) {
-      showError('エディタの初期化中にエラーが発生しました', error);
+      const errorMessage = 'エディタの初期化中にエラーが発生しました';
+      console.error(errorMessage, error);
+      showError(errorMessage, error);
       throw error;
     }
   }
@@ -632,83 +634,31 @@ class ScenarioEditor {
     }
     
     try {
-      // シーンを処理
-      let html = markdown
+      // 特殊なマークダウン記法を処理
+      let processedMarkdown = markdown
         // 見出し1
-        .replace(/^#\s+(.*?)(\n|$)/gm, '<h1 class="scene-title">$1</h1>')
+        .replace(/^#\s+(.*?)(\n|$)/gm, '# $1\n')
         // 見出し2（シーン）
-        .replace(/^##\s+(.*?)(\n|$)/gm, '<h2 class="scene" id="scene-$1">$1</h2>')
+        .replace(/^##\s+(.*?)(\n|$)/gm, '## $1\n')
         // 見出し3（セクション）
-        .replace(/^###\s+(.*?)(\n|$)/gm, '<h3 class="section">$1</h3>')
+        .replace(/^###\s+(.*?)(\n|$)/gm, '### $1\n')
         // 見出し4（サブセクション）
-        .replace(/^####\s+(.*?)(\n|$)/gm, '<h4 class="subsection">$1</h4>');
+        .replace(/^####\s+(.*?)(\n|$)/gm, '#### $1\n');
       
-      // 選択肢を処理
-      html = html.replace(
-        /^-\s*\[(.*?)\]\((.*?)\)/gm,
-        '<li class="choice"><a href="$2" class="action-button">$1</a></li>'
-      );
+      // マークダウンをHTMLに変換
+      let html = markdownToHtml(processedMarkdown);
       
-      // 箇条書きを処理
-      html = html.replace(
-        /^\s*\*\s+(.*?)(?=\n|$)/gm,
-        '<li class="bullet">$1</li>'
-      );
-      
-      // 番号付きリストを処理
-      html = html.replace(
-        /^\s*\d+\.\s+(.*?)(?=\n|$)/gm,
-        '<li class="ordered">$1</li>'
-      );
-      
-      // 太字を処理
-      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      
-      // 斜体を処理
-      html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-      
-      // 取り消し線を処理
-      html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
-      
-      // インラインコードを処理
-      html = html.replace(/`(.*?)`/g, '<code>$1</code>');
-      
-      // コードブロックを処理
-      html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-      
-      // 引用を処理
-      html = html.replace(/^>\s*(.*?)(?=\n|$)/gm, '<blockquote>$1</blockquote>');
-      
-      // リンクを処理
-      html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
-      
-      // 画像を処理
-      html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="preview-image">');
-      
-      // 改行を処理
-      html = html.replace(/\n/g, '<br>');
-      
-      // 連続した改行を段落に変換
-      html = html.replace(/(<br>\s*){2,}/g, '</p><p>');
-      
-      // 段落で囲む
-      if (!html.startsWith('<h') && !html.startsWith('<ul') && !html.startsWith('<ol') && !html.startsWith('<pre') && !html.startsWith('<blockquote')) {
-        html = '<p>' + html + '</p>';
+      // 空の場合はデフォルトのメッセージを表示
+      if (!html || html.trim() === '') {
+        return '<div class="empty-preview">ここにプレビューが表示されます</div>';
       }
       
-      // 空の段落を削除
-      html = html.replace(/<p>\s*<\/p>/g, '');
-      
       return html;
-      
     } catch (error) {
-      console.error('マークダウンの変換中にエラーが発生しました:', error);
-      return `
-        <div class="error">
-          <p>マークダウンの解析中にエラーが発生しました:</p>
-          <pre>${error.message}</pre>
-        </div>
-      `;
+      const errorMessage = 'マークダウンの変換に失敗しました';
+      console.error(errorMessage, error);
+      this.showError(errorMessage, error);
+      return `<div class="error-message">${errorMessage}: ${error.message}</div>`;
     }
   }
 
@@ -941,98 +891,16 @@ class ScenarioEditor {
     }
   }
 }
-// エディタを初期化
-function initializeEditor() {
-  try {
-    console.log('エディタの初期化を開始します...');
-    
-    // 必要な要素が存在するか確認
-    const editorContainer = document.getElementById('editor-container');
-    const previewElement = document.getElementById('scenario-preview');
-    
-    if (!editorContainer) {
-      throw new Error('エディタのコンテナが見つかりません');
-    }
-    
-    if (!previewElement) {
-      console.warn('プレビュー要素が見つかりません。プレビュー機能は無効になります。');
-    }
-    
-    // エディタのインスタンスを作成
-    const editor = new ScenarioEditor();
-    
-    // グローバルに公開（デバッグ用）
-    window.editor = editor;
-    
-    // 初期コンテンツを読み込む
-    if (editor.textarea && editor.textarea.value.trim()) {
-      console.log('初期コンテンツを読み込みます...');
-      editor.importScenario(editor.textarea.value);
-    } else {
-      console.log('初期コンテンツが空です');
-      // 空のコンテンツでプレビューを更新
-      if (previewElement) {
-        previewElement.innerHTML = '<p class="empty-preview">プレビューが表示されます</p>';
-      }
-    }
-    
-    console.log('エディタの初期化が完了しました');
-    return editor;
-  } catch (error) {
-    console.error('エディタの初期化中にエラーが発生しました:', error);
-    
-    // エラーメッセージを表示
-    const statusElement = document.getElementById('editor-status');
-    if (statusElement) {
-      statusElement.textContent = `エラー: ${error.message}`;
-      statusElement.className = 'status-message status-error';
-    }
-    
-    return null;
-  }
-}
-
-// 必要なライブラリが読み込まれているか確認する関数
-function checkDependencies() {
-  const dependencies = {
-    'Quill': typeof window.Quill !== 'undefined',
-    'marked': typeof marked !== 'undefined',
-    'DOMPurify': typeof DOMPurify !== 'undefined',
-    'MarkdownConverter': typeof window.MarkdownConverter !== 'undefined'
-  };
-
-  const missingDeps = Object.entries(dependencies)
-    .filter(([_, loaded]) => !loaded)
-    .map(([name]) => name);
-
-  if (missingDeps.length > 0) {
-    const errorMsg = `以下の必要なライブラリが読み込まれていません: ${missingDeps.join(', ')}`;
-    console.error(errorMsg);
-    showError(errorMsg);
-    return false;
-  }
-  
-  return true;
-}
 
 // ドキュメントの読み込みが完了したら初期化
 function initialize() {
-  console.log('DOMの読み込みが完了しました');
+  debugLog('ドキュメントの読み込みが完了しました');
   
-  // 依存関係のチェック
-  if (!checkDependencies()) {
-    return;
-  }
-  
+  // エディタを初期化
   try {
-    // エディタを初期化
-    window.scenarioEditor = initializeEditor();
-    if (window.scenarioEditor) {
-      console.log('シナリオエディタの初期化が完了しました');
-    }
+    initializeEditor();
   } catch (error) {
-    console.error('エディタの初期化中にエラーが発生しました:', error);
-    showError('エディタの初期化中にエラーが発生しました: ' + error.message);
+    console.error('初期化中にエラーが発生しました:', error);
   }
 }
 

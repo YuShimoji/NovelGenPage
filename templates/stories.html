@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ストーリー一覧 - アドベンチャーゲーム作成AI</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="stories-view" class="view active">
+            <header>
+                <h1>ストーリー一覧</h1>
+                <p>公開されているアドベンチャーゲームをプレイしよう</p>
+            </header>
+
+            <main>
+                <div class="stories-container">
+                    <div class="stories-header">
+                        <h2>人気のストーリー</h2>
+                        <div class="search-box">
+                            <input type="text" id="search-input" placeholder="ストーリーを検索...">
+                            <button id="search-button">🔍</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-tags">
+                        <span class="filter-tag active">すべて</span>
+                        <span class="filter-tag">冒険</span>
+                        <span class="filter-tag">ミステリー</span>
+                        <span class="filter-tag">ファンタジー</span>
+                        <span class="filter-tag">ホラー</span>
+                        <span class="filter-tag">恋愛</span>
+                    </div>
+
+                    <div id="stories-grid" class="stories-grid">
+                        <!-- ストーリーカードがここに動的に挿入されます -->
+                        <div class="loading-message">読み込み中...</div>
+                    </div>
+
+                    <div class="pagination">
+                        <button class="pagination-button" disabled>前へ</button>
+                        <span class="pagination-info">1 / 5</span>
+                        <button class="pagination-button">次へ</button>
+                    </div>
+                </div>
+            </main>
+
+            <footer>
+                <nav>
+                    <ul>
+                        <li><a href="/">🏠 ホームに戻る</a></li>
+                        <li><a href="/editor">📝 シナリオ管理画面</a></li>
+                    </ul>
+                </nav>
+            </footer>
+        </div>
+    </div>
+
+    <script src="/static/js/stories.js" type="module"></script>
+</body>
+</html>

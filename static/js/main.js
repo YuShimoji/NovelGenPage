@@ -1,7 +1,82 @@
-import { ViewManager } from './viewManager.js';
-import { GameManager } from './gameManager.js';
-import { api } from './api.js';
-import { CommonUI } from './commonUI.js';
+// 必要なモジュールをインポート
+import { fetchLatestStories } from './api.js';
+
+// ドキュメントが読み込まれたら実行
+document.addEventListener('DOMContentLoaded', () => {
+  // 新着ストーリーを読み込む
+  loadLatestStories();
+  
+  // その他の初期化処理をここに追加
+});
+
+/**
+ * 新着ストーリーを読み込む
+ */
+async function loadLatestStories() {
+  try {
+    const storiesContainer = document.getElementById('recent-stories');
+    if (!storiesContainer) return;
+    
+    // ローディング表示
+    storiesContainer.innerHTML = '<div class="loading-message">読み込み中...</div>';
+    
+    // APIから最新のストーリーを取得
+    const response = await fetch('/api/v1/stories/latest');
+    if (!response.ok) {
+      throw new Error('ストーリーの読み込みに失敗しました');
+    }
+    
+    const data = await response.json();
+    
+    // ストーリーを表示
+    if (data.stories && data.stories.length > 0) {
+      renderStories(data.stories, storiesContainer);
+    } else {
+      storiesContainer.innerHTML = '<div class="no-stories">表示できるストーリーがありません</div>';
+    }
+  } catch (error) {
+    console.error('ストーリーの読み込み中にエラーが発生しました:', error);
+    const storiesContainer = document.getElementById('recent-stories');
+    if (storiesContainer) {
+      storiesContainer.innerHTML = `
+        <div class="error-message">
+          ストーリーの読み込み中にエラーが発生しました。
+          <button onclick="window.location.reload()">再読み込み</button>
+        </div>
+      `;
+    }
+  }
+}
+
+/**
+ * ストーリーを表示する
+ * @param {Array} stories - ストーリーの配列
+ * @param {HTMLElement} container - 表示するコンテナ要素
+ */
+function renderStories(stories, container) {
+  if (!container) return;
+  
+  const storiesHtml = stories.map(story => `
+    <div class="story-card">
+      <h3>${story.title || '無題のストーリー'}</h3>
+      <p class="story-description">${story.description || '説明はありません'}</p>
+      <div class="story-meta">
+        <span class="author">${story.author || '不明な作者'}</span>
+        <span class="date">${story.createdAt ? new Date(story.createdAt).toLocaleDateString() : '日付不明'}</span>
+      </div>
+      <a href="/play/${story.id}" class="play-button">プレイする</a>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <div class="story-grid">
+      ${storiesHtml}
+    </div>
+  `;
+}
+
+// グローバルに公開（HTMLから直接呼び出すため）
+window.loadLatestStories = loadLatestStories;
 
 /**
  * ホーム画面のUI管理

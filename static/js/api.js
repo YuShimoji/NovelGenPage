@@ -195,5 +195,25 @@ export const api = {
     }
 };
 
+/**
+ * 最新のストーリーを取得します
+ * @returns {Promise<Array>} 最新のストーリーの配列
+ */
+api.fetchLatestStories = async function() {
+    try {
+        const response = await this._get('/api/v1/stories/latest');
+        return response.stories || [];
+    } catch (error) {
+        console.error('Failed to fetch latest stories:', error);
+        throw error;
+    }
+};
+
 // ベースURLを現在のドメインに設定
 api.setBaseUrl(window.location.origin);
+
+// 個別の関数としてもエクスポート
+export const fetchLatestStories = api.fetchLatestStories.bind(api);
+
+// デフォルトエクスポート
+export default api;

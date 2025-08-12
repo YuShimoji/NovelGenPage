@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アドベンチャーゲーム作成AI</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+</head>
+<body>
+    <div class="app-container">
+        <div id="home-view" class="view active">
+            <header>
+                <h1>アドベンチャーゲーム作成AI</h1>
+                <p>AIが生成するインタラクティブなアドベンチャーゲームをお楽しみください</p>
+            </header>
+
+            <main>
+                <div class="home-actions">
+                    <a href="/new-game" class="action-button primary">
+                        <span class="emoji">✨</span>
+                        <span class="text">新しいゲームを作成</span>
+                    </a>
+                    <a href="/stories" class="action-button secondary">
+                        <span class="emoji">🎮</span>
+                        <span class="text">ゲームをプレイ</span>
+                    </a>
+                </div>
+
+                <section class="recent-stories">
+                    <h2>新着ストーリー</h2>
+                    <div id="recent-stories" class="story-grid">
+                        <!-- 新着ストーリーがここに表示されます -->
+                        <div class="loading-message">読み込み中...</div>
+                    </div>
+                </section>
+            </main>
+
+            <footer>
+                <nav>
+                    <ul>
+                        <li><a href="/editor">📝 シナリオ管理画面</a></li>
+                        <li><a href="/static/how-to-play.html">❓ 遊び方</a></li>
+                        <li><a href="/static/privacy-policy.html">🔒 プライバシーポリシー</a></li>
+                    </ul>
+                </nav>
+            </footer>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js" type="module"></script>
+    <script>
+        // グローバルに公開する必要がある関数をここに追加
+        window.searchStories = function(query) {
+            const event = new CustomEvent('search-stories', { detail: { query } });
+            document.dispatchEvent(event);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新しいゲームを生成 - アドベンチャーゲーム作成AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <div class="view active">
+            <header>
+                <h1>新しいゲームを生成</h1>
+                <p>プロンプトを入力して新しいゲームを生成します</p>
+            </header>
+
+            <main>
+                <div class="generate-form-container">
+                    <form id="generate-form" class="generate-form">
+                        <div class="form-group">
+                            <label for="theme-input">テーマ</label>
+                            <input type="text" id="theme-input" placeholder="例: 脱出ゲーム, ファンタジー" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="keywords-input">キーワード</label>
+                            <textarea id="keywords-input" placeholder="例: 古い城, 魔法の剣, 囚われた姫" required></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="back-button" class="btn btn-secondary">戻る</button>
+                            <button type="submit" id="generate-button" class="btn btn-primary">🚀 ゲームを生成する</button>
+                        </div>
+                    </form>
+                    
+                    <div id="generation-status" class="status-message"></div>
+                    <div id="generated-content" class="generated-content"></div>
+                </div>
+            </main>
+
+            <footer>
+                <nav>
+                    <ul>
+                        <li><a href="/">🏠 ホームに戻る</a></li>
+                        <li><a href="/editor">📝 シナリオ管理画面</a></li>
+                    </ul>
+                </nav>
+            </footer>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', path='/js/new_game.js') }}" type="module"></script>
+</body>
+</html>

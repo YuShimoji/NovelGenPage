@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, FileResponse
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 import re
@@ -18,7 +18,18 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 # 静的ファイルのマウント
 static_dir = BASE_DIR / "static"
 os.makedirs(static_dir, exist_ok=True)
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+# テンプレートディレクトリの設定
+templates_dir = BASE_DIR / "templates"
+
+# ルートパス（/）のハンドラ
+@app.get("/")
+async def root(request: Request):
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "page_title": "NovelGenPage - ホーム"
+    })
 
 # エディタページのルート（管理者用）
 @app.get("/editor", response_class=HTMLResponse)
@@ -31,141 +42,129 @@ async def editor_page(request: Request):
     })
 
 # メインページ
-# 全ストーリーを取得するAPIエンドポイント
-@app.get("/api/v1/stories")
-async def get_all_stories():
-    # メモリから全シナリオを取得（本番ではデータベースから取得）
-    all_stories = list(scenarios_db.values())
-    # 最終更新日でソート（新しい順）
-    all_stories.sort(key=lambda x: x.get('last_updated', ''), reverse=True)
-    return {"stories": all_stories}
+@app.get("/index.html", response_class=HTMLResponse)
+async def home_page(request: Request):
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "page_title": "NovelGenPage - 新着ストーリー"
+    })
 
-# 新着ストーリーを取得するAPIエンドポイント
-@app.get("/api/v1/stories/latest")
-async def get_latest_stories():
-    # メモリから最新のシナリオを取得（本番ではデータベースから取得）
-    all_stories = list(scenarios_db.values())
-    # 最終更新日でソート（新しい順）
-    all_stories.sort(key=lambda x: x.get('last_updated', ''), reverse=True)
-    latest_stories = all_stories[:5]  # 最新5件を取得
-    return {"stories": latest_stories}
+# 新しいゲーム作成ページ
+@app.get("/new-game", response_class=HTMLResponse)
+async def new_game_page(request: Request):
+    return templates.TemplateResponse("new_game.html", {
+        "request": request
+    })
 
-# トップページ - 新着ストーリーを表示
 # ストーリー一覧ページ
 @app.get("/stories", response_class=HTMLResponse)
 async def stories_page(request: Request):
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>NovelGenPage - ストーリー一覧</title>
-        <link rel="stylesheet" href="/static/css/style.css">
-    </head>
-    <body>
-        <header>
-            <h1>NovelGenPage</h1>
-            <nav>
-                <a href="/">ホーム</a>
-                <a href="/stories" class="active">ストーリー一覧</a>
-                <a href="/editor" class="admin-link">エディタ（管理者用）</a>
-            </nav>
-        </header>
-        <main>
-            <h2>ストーリー一覧</h2>
-            <div id="stories-list" class="stories-grid">
-                <p>読み込み中...</p>
-            </div>
-        </main>
-        <script>
-            // ストーリー一覧を取得して表示
-            async function loadStories() {
-                try {
-                    const response = await fetch('/api/v1/stories');
-                    const data = await response.json();
-                    const container = document.getElementById('stories-list');
-                    
-                    if (data.stories && data.stories.length > 0) {
-                        container.innerHTML = data.stories.map(story => `
-                            <div class="story-card">
-                                <h3>${story.title || '無題のストーリー'}</h3>
-                                <p>${story.description || '説明なし'}</p>
-                                <p class="meta">最終更新: ${new Date(story.last_updated).toLocaleString()}</p>
-                                <a href="/story/${story.id}" class="button">読む</a>
-                            </div>
-                        `).join('');
-                    } else {
-                        container.innerHTML = '<p>ストーリーがありません</p>';
-                    }
-                } catch (error) {
-                    console.error('ストーリーの読み込みに失敗しました:', error);
-                    document.getElementById('stories-list').innerHTML = 
-                        '<p>ストーリーの読み込みに失敗しました</p>';
-                }
-            }
-            
-            // ページ読み込み時にストーリーを読み込む
-            document.addEventListener('DOMContentLoaded', loadStories);
-        </script>
-    </body>
-    </html>
-    """
+    return templates.TemplateResponse("stories.html", {
+        "request": request
+    })
 
-@app.get("/", response_class=HTMLResponse)
-async def home_page(request: Request):
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>NovelGenPage - 新着ストーリー</title>
-        <link rel="stylesheet" href="/static/css/style.css">
-    </head>
-    <body>
-        <header>
-            <h1>NovelGenPage</h1>
-            <nav>
-                <a href="/">ホーム</a>
-                <a href="/stories">ストーリー一覧</a>
-                <a href="/editor" class="admin-link">エディタ（管理者用）</a>
-            </nav>
-        </header>
-        <main>
-            <h2>新着ストーリー</h2>
-            <div id="latest-stories" class="stories-grid">
-                <p>読み込み中...</p>
-            </div>
-        </main>
-        <script>
-            // 新着ストーリーを取得して表示
-            async function loadLatestStories() {
-                try {
-                    const response = await fetch('/api/v1/stories/latest');
-                    const data = await response.json();
-                    const container = document.getElementById('latest-stories');
-                    
-                    if (data.stories && data.stories.length > 0) {
-                        container.innerHTML = data.stories.map(story => `
-                            <div class="story-card">
-                                <h3>${story.title || '無題のストーリー'}</h3>
-                                <p>${story.scenes?.length || 0} シーン</p>
-                                <a href="/story/${story.id}" class="button">読む</a>
-                            </div>
-                        `).join('');
-                    } else {
-                        container.innerHTML = '<p>新着ストーリーはありません</p>';
-                    }
-                } catch (error) {
-                    console.error('ストーリーの読み込みに失敗しました:', error);
-                    document.getElementById('latest-stories').innerHTML = 
-                        '<p>ストーリーの読み込みに失敗しました</p>';
-                }
-            }
-            
-            // ページ読み込み時にストーリーを読み込む
-            document.addEventListener('DOMContentLoaded', loadLatestStories);
-        </script>
-    </body>
-    </html>
-    """
+# ストーリーモデル
+class Story(BaseModel):
+    id: str
+    title: str
+    description: str
+    author: str
+    created_at: str
+    tags: List[str] = []
+    play_count: int = 0
+    rating: float = 0.0
+
+# ダミーのストーリーデータ
+DUMMY_STORIES = [
+    Story(
+        id="1",
+        title="魔法の森の冒険",
+        description="魔法の森に迷い込んだ主人公が、不思議な生き物たちと出会いながら元の世界に戻るための冒険を繰り広げます。",
+        author="AIクリエイター",
+        created_at="2023-01-01T12:00:00Z",
+        tags=["ファンタジー", "冒険"],
+        play_count=1245,
+        rating=4.5
+    ),
+    Story(
+        id="2",
+        title="廃病院の謎",
+        description="閉鎖された病院を探索中に起きた不可解な現象の謎を解き明かすホラーアドベンチャー。",
+        author="AIクリエイター",
+        created_at="2023-01-02T15:30:00Z",
+        tags=["ホラー", "ミステリー"],
+        play_count=987,
+        rating=4.2
+    ),
+    Story(
+        id="3",
+        title="時をかける探偵",
+        description="過去にタイムスリップした探偵が、未解決事件の真相に迫るタイムトラベルミステリー。",
+        author="AIクリエイター",
+        created_at="2023-01-03T09:15:00Z",
+        tags=["ミステリー", "SF"],
+        play_count=1567,
+        rating=4.7
+    )
+]
+
+# 全ストーリーを取得するAPIエンドポイント
+@app.get("/api/v1/stories", response_model=List[Dict])
+async def get_all_stories():
+    # 実際のアプリではデータベースから取得
+    return [story.dict() for story in DUMMY_STORIES]
+
+# 新着ストーリーを取得するAPIエンドポイント
+@app.get("/api/v1/stories/latest", response_model=Dict)
+async def get_latest_stories(limit: int = 5):
+    # 実際のアプリではデータベースから取得し、作成日でソート
+    latest_stories = sorted(DUMMY_STORIES, key=lambda x: x.created_at, reverse=True)[:limit]
+    return {"stories": [story.dict() for story in latest_stories]}
+
+# ストーリーIDで取得するAPIエンドポイント
+@app.get("/api/v1/stories/{story_id}", response_model=Dict)
+async def get_story(story_id: str):
+    # 実際のアプリではデータベースから取得
+    for story in DUMMY_STORIES:
+        if story.id == story_id:
+            return story.dict()
+    raise HTTPException(status_code=404, detail="Story not found")
+
+# ゲーム生成APIエンドポイント
+class GameGenerationRequest(BaseModel):
+    theme: str
+    keywords: str
+
+@app.post("/api/v1/games/generate")
+async def generate_game(request: GameGenerationRequest):
+    # 実際のアプリではAIモデルを呼び出してゲームを生成
+    # ここではダミーのレスポンスを返す
+    import time
+    time.sleep(1)  # 処理をシミュレート
+    
+    new_story = Story(
+        id=str(len(DUMMY_STORIES) + 1),
+        title=request.theme,
+        description=f"これは「{request.theme}」をテーマにしたアドベンチャーゲームです。キーワード: {request.keywords}",
+        author="あなた",
+        created_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        tags=[tag.strip() for tag in request.keywords.split(",") if tag.strip()],
+        play_count=0,
+        rating=0.0
+    )
+    
+    # 実際のアプリではデータベースに保存
+    DUMMY_STORIES.append(new_story)
+    
+    return {
+        "success": True,
+        "story_id": new_story.id,
+        "message": "ゲームが正常に生成されました"
+    }
+
+
+
+# ストーリー一覧ページのルートは既に上で定義済みのため、この重複した定義を削除します
 
 # データモデル
 class ImportRequest(BaseModel):
