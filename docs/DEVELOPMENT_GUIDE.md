@@ -42,6 +42,58 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 <link rel="stylesheet" href="/static/css/style.css">
 ```
 
+## エディタの初期化と依存関係管理
+
+### 初期化の流れ
+
+1. **依存関係のチェック**
+   - `checkDependencies()` 関数で必要なライブラリが読み込まれているか確認
+   - 不足している依存関係がある場合はエラーメッセージを表示
+
+2. **エディタの初期化**
+   - `ScenarioEditor` クラスのインスタンスを作成
+   - グローバルスコープに `window.NovelGenPage.editor` として登録
+   - 後方互換性のため `window.editor` にも登録
+
+3. **初期コンテンツの読み込み**
+   - `initial-content` 要素があればその内容を読み込み
+   - テキストエリアに初期値があればそれを読み込み
+   - どちらもない場合は空の状態で初期化
+
+### 依存関係の管理
+
+```javascript
+// 依存関係のチェック例
+function checkDependencies() {
+  const required = {
+    'Quill': () => typeof Quill !== 'undefined',
+    'markdownToHtml': () => typeof markdownToHtml === 'function'
+  };
+  
+  const missing = [];
+  
+  for (const [name, check] of Object.entries(required)) {
+    if (!check()) {
+      console.error(`必要なライブラリが読み込まれていません: ${name}`);
+      missing.push(name);
+    }
+  }
+  
+  if (missing.length > 0) {
+    showError(`次の必要なライブラリが読み込まれていません: ${missing.join(', ')}`);
+    return false;
+  }
+  
+  return true;
+}
+```
+
+### エラーハンドリング
+
+- 初期化エラーはコンソールに出力
+- ユーザーには分かりやすいエラーメッセージを表示
+- エラー状態からの復旧を可能に
+
 ## フロントエンド開発の注意点
 
 ### イベントリスナーの管理
