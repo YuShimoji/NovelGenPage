@@ -1,5 +1,29 @@
 # 開発履歴 (Changelog)
 
+## 2025-08-16 (バグ修正 / リファクタリング)
+
+- **エディタ重複表示の防止**
+  - `static/js/editor.js`: Quill 初期化処理を `initQuill()` に分離し、グローバル `initializeEditor()` を新設。
+  - 既存のツールバーDOM（`#editor-toolbar`, `#toolbar-container`, `#toolbar`）が存在する場合はそれを使用し、Quill が新規ツールバーを生成しないように変更。
+  - 既存インスタンスがある場合は `#editor` の DOM をクリアしてから再初期化することで二重初期化を回避。
+  - UI 参照の安全化（`showStatus` と `previewElement` のフォールバック）を追加。
+- **Quill 警告の解消（カスタムボタンの互換）**
+  - `static/js/editor.js`: `sanitizeCustomToolbarButtons()` の検出対象に `#toolbar-container` を追加。
+  - 旧 `.ql-insert-scene` / `.ql-insert-choice` を `.insert-scene-btn` / `.insert-choice-btn` に自動置換し、ID を補完して互換動作を保証。
+  - `applyContentMode()` と UI 参照で `#toolbar-container` をフォールバック対象に追加。
+- **キャッシュ対策**
+  - `templates/editor.html`: `editor.js` のクエリを `?v=1.0.3` に更新してキャッシュ破棄。
+- **ドキュメント更新**
+  - `docs/PROGRESS.md`, `CURRENT_ISSUES.md`, `TESTING.md` を本修正内容に合わせて更新。
+
+- **ビュー切替UIの恒常化とZenボタン**
+  - `templates/editor.html`: ヘッダ直下にグローバルな `.view-mode-toggle` を追加（分割/エディタ/プレビュー/Zen）。
+  - `static/js/editor.js`: `ensureViewToggleUI()` を強化。既存トグルがツールバー/エディタ内のみの場合はヘッダ直下に複製を生成。
+  - これによりプレビュー単独表示でもトグルが消えず、元の表示に戻れるようになった。
+
+- **旧URLの互換対応**
+  - `main.py`: `/scenario-editor.html` を `/editor` へ `307` リダイレクトする互換ルートを追加（404回避）。
+
 ## 2025-01-XX (リファクタリング)
 
 - **コードベースの大規模リファクタリング**

@@ -31,6 +31,11 @@ async def root(request: Request):
         "page_title": "NovelGenPage - ホーム"
     })
 
+# 互換ルート: 旧URLを新URLにリダイレクト
+@app.get("/scenario-editor.html")
+async def legacy_scenario_editor():
+    return RedirectResponse(url="/editor", status_code=307)
+
 # エディタページのルート（管理者用）
 @app.get("/editor", response_class=HTMLResponse)
 async def editor_page(request: Request):

@@ -1,4 +1,136 @@
-import { gameState } from './gameState.js';
+class ScenarioUI {
+  constructor(editor) {
+    this.editor = editor;
+    this.initializeElements();
+    this.initializeEventListeners();
+    this.initializeViewMode();
+  }
+
+  // 要素の初期化
+  initializeElements() {
+    debugLog('ScenarioUI の要素を初期化しています...');
+    
+    this.editorElement = document.getElementById('editor');
+    this.previewElement = document.getElementById('preview-content');
+    this.importButton = document.getElementById('import-button');
+    this.saveButton = document.getElementById('save-button');
+    this.status = document.getElementById('editor-status');
+    this.boldButton = document.getElementById('bold-btn');
+    this.italicButton = document.getElementById('italic-btn');
+    this.insertSceneButton = document.getElementById('insert-scene');
+    this.insertChoiceButton = document.getElementById('insert-choice');
+    this.uploadImageButton = document.getElementById('upload-image');
+
+    if (!this.editorElement) throw new Error('エディタ要素 (#editor) が見つかりません');
+    if (!this.previewElement) console.warn('プレビュー要素 (#preview-content) が見つかりません');
+
+    debugLog('UI要素の初期化が完了しました');
+  }
+
+  // イベントリスナーを設定
+  initializeEventListeners() {
+    this.saveButton?.addEventListener('click', () => this.editor.saveScenario());
+    this.importButton?.addEventListener('click', () => {
+        const textarea = document.getElementById('scenario-editor');
+        if (textarea) {
+            this.editor.importScenario(textarea.value);
+        }
+    });
+    
+    // 画像アップロードボタン
+    this.uploadImageButton?.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.setAttribute('type', 'file');
+      input.setAttribute('accept', 'image/*');
+      input.click();
+      
+      input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+        
+        try {
+          this.showStatus('画像をアップロード中...', 'info');
+          await this.editor.handleImageUpload(file);
+        } catch (error) {
+          console.error('画像のアップロードに失敗しました:', error);
+          this.showStatus('画像のアップロードに失敗しました', 'error');
+        }
+      };
+    });
+
+    // 表示モード切り替えボタン
+    document.querySelectorAll('.view-mode-btn').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const mode = e.currentTarget.dataset.mode;
+        this.setViewMode(mode);
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey) {
+        switch (e.key) {
+          case '1': this.setViewMode('split'); e.preventDefault(); break;
+          case '2': this.setViewMode('editor'); e.preventDefault(); break;
+          case '3': this.setViewMode('preview'); e.preventDefault(); break;
+        }
+      }
+    });
+  }
+
+  // 表示モードを初期化
+  initializeViewMode() {
+    const savedViewMode = localStorage.getItem('editorViewMode') || 'split';
+    this.setViewMode(savedViewMode);
+  }
+
+  // 表示モードを設定
+  setViewMode(mode) {
+    const editorPanel = document.querySelector('.editor-panel');
+    const previewPanel = document.querySelector('.preview-panel');
+    const buttons = document.querySelectorAll('.view-mode-btn');
+
+    buttons.forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.view-mode-btn[data-mode="${mode}"]`)?.classList.add('active');
+
+    switch (mode) {
+      case 'editor':
+        editorPanel.style.display = 'block';
+        previewPanel.style.display = 'none';
+        break;
+      case 'preview':
+        editorPanel.style.display = 'none';
+        previewPanel.style.display = 'block';
+        break;
+      case 'split':
+      default:
+        editorPanel.style.display = 'block';
+        previewPanel.style.display = 'block';
+        editorPanel.style.flex = '1';
+        previewPanel.style.flex = '1';
+        break;
+    }
+
+    window.dispatchEvent(new Event('resize'));
+    localStorage.setItem('editorViewMode', mode);
+  }
+
+  // ステータスを表示
+  showStatus(message, type = 'info') {
+    if (!this.status) return;
+
+    this.status.textContent = message;
+    this.status.className = `status status-${type}`;
+
+    if (type !== 'error') {
+      setTimeout(() => {
+        if (this.status.textContent === message) {
+          this.status.textContent = '';
+          this.status.className = 'status';
+        }
+      }, 3000);
+    }
+  }
+}
 
 // DOM要素のキャッシュ
 const gameTitleElement = document.getElementById('game-title');
