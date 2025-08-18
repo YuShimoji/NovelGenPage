@@ -11,7 +11,16 @@ window.NovelGenPage = window.NovelGenPage || {};
     e.preventDefault();
     e.stopPropagation();
     
-    const sceneLink = e.currentTarget;
+    // 委譲イベント時は currentTarget が body 等になるため、確実に .scene-link を特定
+    const sceneLink = (e && e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.contains('scene-link'))
+      ? e.currentTarget
+      : (e && e.target && typeof e.target.closest === 'function')
+        ? e.target.closest('.scene-link')
+        : (this && this.classList && this.classList.contains && this.classList.contains('scene-link') ? this : null);
+    if (!sceneLink) {
+      console.warn('scene-link 要素が特定できませんでした');
+      return;
+    }
     const sceneId = sceneLink.getAttribute('data-scene-id');
     const sceneName = sceneLink.textContent || `シーン ${sceneId}`;
     
@@ -49,16 +58,45 @@ window.NovelGenPage = window.NovelGenPage || {};
       try {
         // カスタムレンダラーを設定してシーンリンクを処理
         const renderer = new (window.marked.Renderer || window.marked.renderer || function(){})();
-        const linkRenderer = renderer.link.bind(renderer);
-        
-        renderer.link = (href, title, text) => {
-          // シーンリンクの処理
-          const sceneMatch = href.match(/^scene:(\d+)$/);
-          if (sceneMatch) {
-            return `<a href="#" class="scene-link" data-scene-id="${sceneMatch[1]}">${text}</a>`;
+        const linkRenderer = typeof renderer.link === 'function' ? renderer.link.bind(renderer) : null;
+
+        // 旧: link(href, title, text)
+        // 新: link(token) 形式の両対応
+        renderer.link = function(href, title, text) {
+          const originalArgs = arguments;
+          let url = href;
+          let label = text;
+          let ttl = title;
+
+          // marked v16+ では token オブジェクトが渡される場合がある
+          if (typeof href === 'object' && href !== null) {
+            const token = href;
+            url = token.href || '';
+            ttl = token.title || null;
+            // token.text はすでに HTML 文字列の場合あり。tokens がある場合は parser で再構成
+            if (typeof token.text === 'string') {
+              label = token.text;
+            } else if (token.tokens && this && this.parser && typeof this.parser.parseInline === 'function') {
+              label = this.parser.parseInline(token.tokens);
+            } else {
+              label = '';
+            }
           }
-          // 通常のリンクはデフォルトのレンダラーを使用
-          return linkRenderer(href, title, text);
+
+          // シーンリンクの処理（url が文字列であることを確認）
+          if (typeof url === 'string') {
+            const sceneMatch = url.match(/^scene:(\d+)$/);
+            if (sceneMatch) {
+              return `<a href="#" class="scene-link" data-scene-id="${sceneMatch[1]}">${label}</a>`;
+            }
+          }
+
+          // 通常のリンクはデフォルトのレンダラーを使用（存在すれば）
+          if (linkRenderer) return linkRenderer.apply(renderer, originalArgs);
+          // フォールバック：素朴な a タグ
+          const safeUrl = typeof url === 'string' ? url : '';
+          const safeLabel = typeof label === 'string' ? label : '';
+          return `<a href="${safeUrl}">${safeLabel}</a>`;
         };
         // marked の呼び出し形に対応（関数 or オブジェクト.parse）
         const markedApi = (typeof window.marked === 'function')

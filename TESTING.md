@@ -84,7 +84,9 @@ This document provides instructions for testing the Adventure Game AI project.
     * カスタムボタン（「シーン」「選択肢」）はテキストラベルで表示される。
 
 13. **favicon**
-    * ブラウザの Network タブで `/static/favicon.svg` が 200 で取得されること。
+    * ブラウザの Network タブで以下を確認：
+      - `/static/favicon.svg` が 200 で取得されること。
+      - `/favicon.ico` が 200 で取得され、Content-Type が `image/svg+xml` であること（`main.py` の互換ルート）。
     * アドレスバーのアイコンが表示されること。
 
 14. **エディタ入力が可能**
@@ -96,22 +98,31 @@ This document provides instructions for testing the Adventure Game AI project.
 
 15. **シーン挿入ボタンの動作**
     * `#insert-scene` または `.insert-scene-btn`（旧 `.ql-insert-scene` でも可）をクリック。
-    * エディタに以下のスニペットが挿入されること。
-      - `## 新しいシーン` ヘッダ
-      - `### 選択肢` と `- [次のシーン](scene:2)` の行
+    * エディタに以下のスニペットが挿入されること（現仕様）：
+      - 1行目: `## 新しいシーン`
+      - 2行目: `ここに本文を書きます。`
+      - 3行目: `### 選択肢`
+      - 4行目: `- [次のシーン](scene:2)`
     * 挿入直後にプレビューが更新されること（`#preview-content`）。
 
 16. **選択肢挿入ボタンの動作**
     * `#insert-choice` または `.insert-choice-btn`（旧 `.ql-insert-choice` でも可）をクリック。
-    * エディタに以下のスニペットが挿入されること。
-      - `### 選択肢`
-      - `- [選択肢1](scene:1)` および `- [選択肢2](scene:2)`
+    * エディタに以下のスニペットが挿入されること（現仕様）：
+      - 1行目: `### 選択肢`
+      - 2行目: `- [選択肢1](scene:1)`
+      - 3行目: `- [選択肢2](scene:2)`
     * 挿入直後にプレビューが更新されること。
 
 17. **markdown 変換でエラーが出ない**
-    * コンソールに `window.marked is not a function` を含むエラーが出ないこと。
+    * コンソールに以下のエラーが出ないこと。
+      - `window.marked is not a function`
+      - `href.match is not a function`（`renderer.link` の互換修正が効いていること）
     * `scene:1` などのリンクは、プレビューでは `<a class="scene-link" data-scene-id="1">...</a>` に変換されていること。
     * `marked` の実装差異（関数/`parse`）どちらでもプレビューが生成されること。
+
+18. **シーンリンクのクリック挙動**
+    * プレビュー内のシーンリンク（`.scene-link`）をクリックすると、デリゲーションでハンドラが呼ばれ、`console` に遷移ログが出ること。
+    * クリック後、そのリンクに `active` クラスが付与されること。
 
 ### Game Play Testing
 
@@ -148,3 +159,27 @@ This document provides instructions for testing the Adventure Game AI project.
 ---
 
 以上の修正を適用し、再度動作確認をお願いいたします。特に、トップページの表示と、シナリオエディタでのシナリオ一覧・詳細の表示が正しく行われるかをご確認ください。
+
+## 4. 単体テスト（Jest）
+
+- 概要: フロントエンドの単体テストを Jest + jsdom で実行します。`markdown-converter` の `renderer.link` 互換修正の回帰を自動検証します。
+
+### セットアップ
+
+1. 依存関係インストール（未導入の場合）
+   ```bash
+   npm ci
+   ```
+2. 実行
+   ```bash
+   npx jest --runInBand --verbose
+   ```
+
+### テスト項目
+
+- `__tests__/markdown-converter.test.js`
+  - marked 関数API（`marked(markdown, { renderer })`）で `scene:` リンクが `.scene-link` に変換される。
+  - marked オブジェクトAPI（`marked.parse(markdown, { renderer })`）でも同様に変換され、例外（`href.match` 等）が発生しない。
+  - 通常の URL は通常の `<a href>` にフォールバックする。
+
+実行結果がグリーンであることを確認してください。失敗する場合はブラウザ側の手動回帰テスト（上記 2. How to Test）で再現の有無を確認し、`static/js/markdown-converter.js` の `renderer.link` 実装差異を見直してください。

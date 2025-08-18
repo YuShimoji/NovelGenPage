@@ -23,6 +23,15 @@ app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 # テンプレートディレクトリの設定
 templates_dir = BASE_DIR / "templates"
 
+# favicon.ico 互換: ブラウザが自動取得する /favicon.ico に対し、既存の SVG を返す
+@app.get("/favicon.ico")
+async def favicon_ico():
+    svg_path = static_dir / "favicon.svg"
+    if svg_path.exists():
+        return FileResponse(path=str(svg_path), media_type="image/svg+xml")
+    # 予備: 見つからない場合は 204 を返す
+    return HTMLResponse(status_code=204, content="")
+
 # ルートパス（/）のハンドラ
 @app.get("/")
 async def root(request: Request):

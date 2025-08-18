@@ -126,3 +126,20 @@ Webブラウザを開き、アドレスバーに以下のURLを入力します�
 - テストプレイ画面でゲームをプレイできること。
 
 以上で、現在実装されている主要機能のテストは完了です。
+
+## 6. 回帰テスト（2025-08-18: marked リンクレンダラ互換修正）
+
+対象ファイル: `static/js/markdown-converter.js`, `templates/editor.html`
+
+手順:
+1. サーバー起動後、`/editor` をブラウザで開く。
+2. 「シーン」ボタン（`#insert-scene`）をクリックし、プレビューが更新されることを確認。
+3. 「選択肢」ボタン（`#insert-choice`）をクリックし、プレビューが更新されることを確認。
+4. 開発者ツールのコンソールを確認し、次のエラーが出ていないこと:
+   - `window.marked is not a function`
+   - `TypeError: href.match is not a function`
+5. プレビュー内の `scene:` リンクが `<a class="scene-link" data-scene-id="N">` に変換されていること。
+6. `.scene-link` をクリックし、ハンドラが発火して遷移ログが出ること（`console.log` 等）。
+
+メモ:
+- `templates/editor.html` は `markdown-converter.js?v=1.0.4` を読み込む。キャッシュクリアやハードリロードを実施。

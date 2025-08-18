@@ -1,3 +1,8 @@
+ - **markdown 変換の不具合修正**
+   - `static/js/markdown-converter.js` の `renderer.link` が `href` にオブジェクト（token）が渡される場合に未対応だったため、`href.match is not a function` 例外が発生。
+   - 旧API（`link(href, title, text)`）/新API（`link(token)`）の両対応に修正。通常リンクはデフォルトレンダラへ委譲、`scene:` は `.scene-link` に変換。
+   - テンプレートの読み込みを `markdown-converter.js?v=1.0.4` に更新しキャッシュバスティング。
+   - 単体テストを追加：`__tests__/markdown-converter.test.js`（marked 関数API/parse API 両対応の互換確認と `.scene-link` 変換検証）。
 # 開発進捗
 
 ## 実装済み機能
@@ -100,3 +105,19 @@
 - **テスト/ドキュメント**
   - `TESTING.md` に「シーン/選択肢挿入」および「markdown 変換のエラー非発生」確認手順を追加。
   - 新規 `docs/EDITOR_TASKS.md` を作成（エディタ機能の分解、設計方針、期待結果、今後の拡張）。
+
+## 最近の進捗 (2025-08-18)
+
+- **favicon 404 の恒久対応**
+  - `main.py` に `/favicon.ico` ルートを追加し、`/static/favicon.svg` を返すようにして 404 を解消。
+  - `templates/editor.html` の `<head>` に `<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">` を追加。
+
+- **タスクリスト/ドキュメントの充実**
+  - `docs/TODO.md` に詳細なマイルストーン、バックログ、受け入れ基準、短期スプリント項目を追記。
+  - `docs/EDITOR_TASKS.md` にマイルストーンと受け入れ基準、E2E/ユニットテスト計画を追記。
+
+- **挙動の確認メモ（シーン/選択肢スニペット）**
+  - 現仕様：
+    - `insertScene()` は 4 行（見出し/本文/選択肢見出し/選択肢1）。
+    - `insertChoice()` は 3 行（選択肢見出し + 2 行）。
+  - 期待仕様が 3 行へ統一の場合、本文行の省略を次スプリントで検討（テンプレート化対応の一環）。
