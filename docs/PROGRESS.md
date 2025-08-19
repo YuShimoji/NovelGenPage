@@ -2,7 +2,8 @@
    - `static/js/markdown-converter.js` の `renderer.link` が `href` にオブジェクト（token）が渡される場合に未対応だったため、`href.match is not a function` 例外が発生。
    - 旧API（`link(href, title, text)`）/新API（`link(token)`）の両対応に修正。通常リンクはデフォルトレンダラへ委譲、`scene:` は `.scene-link` に変換。
    - テンプレートの読み込みを `markdown-converter.js?v=1.0.4` に更新しキャッシュバスティング。
-   - 単体テストを追加：`__tests__/markdown-converter.test.js`（marked 関数API/parse API 両対応の互換確認と `.scene-link` 変換検証）。
+  - 単体テストを追加：`__tests__/markdown-converter.test.js`（marked 関数API/parse API 両対応の互換確認と `.scene-link` 変換検証）。
+  - クリックハンドラの堅牢化：`handleSceneLinkClick()` が委譲イベントでも `.scene-link` を正しく特定できるように、`currentTarget` → `target.closest('.scene-link')` → `this` の順で解決するよう改善。
 # 開発進捗
 
 ## 実装済み機能
