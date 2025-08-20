@@ -20,17 +20,17 @@
 - [ ] S1-1: favicon 404 恒久対策のテスト追加（/favicon.ico 200 & SVG MIME）
 - [ ] S1-2: スニペット仕様の確定（3行/4行の要件定義とデフォルト設定）
 - [ ] S1-3: `insertScene/insertChoice` のテンプレート化（設定値/データ属性から生成）
-- [ ] S1-4: Jest 実行環境の安定化（詳細出力、jsdom、CI 実行）
-  - 進捗: `jest.config.js` を `jest-environment-jsdom` に更新、`package.json` に `test:verbose` を追加、GitHub Actions（`.github/workflows/ci.yml`）で Node 20 + `npm ci` + `jest --runInBand --verbose` を実行するCIを追加。
+- [x] S1-4: Jest 実行環境の安定化（詳細出力、jsdom、CI 実行）
+  - 完了: `jest.config.js` を `jest-environment-jsdom` に更新、`package.json` に `test:verbose` を追加、GitHub Actions（`.github/workflows/ci.yml`）で Node 20 + `npm ci` + `jest --runInBand --verbose` を実行するCIを追加。ローカル/CI ともにグリーン。
 - [ ] S1-5: markdown-converter の単体テスト（marked 関数/parse 両対応）
   - 進捗: `__tests__/markdown-converter.test.js` を追加（関数API/parse API 両対応の互換確認、scene: リンクの `.scene-link` 変換検証）
-- [ ] S1-6: プレビューのクリックハンドラ（scene: のナビゲーション仕様設計）
-  - 進捗: `static/js/markdown-converter.js` の `handleSceneLinkClick()` を委譲イベント対応で堅牢化（`currentTarget/closest/this` の順に解決）。
-  - 進捗(追加): `static/js/editor.js` に `window.NovelGenPage.navigateToScene(sceneId, sceneName)` を実装し、クリック時の警告を解消。`TESTING.md` に検証手順を追加。
+- [x] S1-6: プレビューのクリックハンドラ（scene: のナビゲーション仕様設計）
+  - 完了: `static/js/markdown-converter.js` の `handleSceneLinkClick()` を委譲イベント対応で堅牢化（`currentTarget/closest/this` の順に解決）。
+  - 完了(追加): `static/js/editor.js` に `window.NovelGenPage.navigateToScene(sceneId, sceneName)` を実装し、クリック時の警告を解消。`TESTING.md` に検証手順を追加。`templates/editor.html` にて `editor.js?v=1.0.4` に更新しキャッシュ不整合を解消。
 - [ ] S1-7: 画像アップロードのAPI設計（エンドポイント/認証/保存先）
 - [ ] S1-8: ドキュメント更新（PROGRESS/TESTING/EDITOR_TASKS/TODO 一貫性チェック）
- - [ ] S1-9: プレビュー別ポート時の editor.css フォールバック対応
-  - 進捗: `templates/editor.html` にフォールバック挿入を実装（onerror + styleSheets 遅延確認、`127.0.0.1:8000` からの再取得）。`TESTING.md` に確認手順を追記。完了。
+ - [x] S1-9: プレビュー別ポート時の editor.css フォールバック対応
+  - 完了: `templates/editor.html` にフォールバック挿入を実装（onerror + styleSheets 遅延確認、`127.0.0.1:8000` からの再取得）。`TESTING.md` に確認手順を追記。
 
 ## フロントエンド
 
