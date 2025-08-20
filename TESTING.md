@@ -88,7 +88,8 @@ This document provides instructions for testing the Adventure Game AI project.
 
 10. **キャッシュクリア / バージョン確認**
     * ブラウザでハードリロード（Ctrl+F5 / Cmd+Shift+R）を実行。
-    * DevTools > Network で `editor.js?v=1.0.3` が読み込まれていることを確認。
+    * DevTools > Network で `editor.js?v=1.0.4` が読み込まれていることを確認（`v=1.0.3` ではなく）。
+    * もし `v=1.0.3` が表示される場合は、`/editor` ページを一度閉じて再度開くか、キャッシュを完全削除して再試行。
 
 11. **Quill 警告が出ないこと**
     * Console に以下の警告が表示されないことを確認。
