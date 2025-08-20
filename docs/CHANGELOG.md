@@ -1,5 +1,17 @@
 # 開発履歴 (Changelog)
 
+## 2025-08-21 (バグ修正 / ドキュメント)
+
+- **シーンリンクの重複ナビゲーション修正**
+  - `static/js/markdown-converter.js`: デリゲーション用クリックハンドラの重複登録を防止。
+    - `removeEventListener('click', handler, true)` にキャプチャ指定を追加し、`addEventListener(..., true)` と一致させた。
+    - `window.NovelGenPage._sceneHandlersAttached` フラグで多重セットアップを明示管理。
+  - 症状: `.scene-link` クリック時の遷移ログが複数回出力される、`navigateToScene` が重複呼び出しされる。
+  - 改善: クリック1回につき1回のみログとハンドラが発火。
+- **スクリプトのバージョン統一（キャッシュバスティング）**
+  - `templates/editor.html` / `scenario-editor.html` の参照を `markdown-converter.js?v=1.0.4` / `editor.js?v=1.0.4` に統一。
+  - 旧版がキャッシュされていた場合に最新修正が反映されない問題を予防。
+
 ## 2025-08-16 (バグ修正 / リファクタリング)
 
 - **エディタ重複表示の防止**

@@ -17,6 +17,11 @@
 22. **プレビューのスクロール**
     * プレビュー領域が上部へスムーズスクロールすること（将来的にアンカー移動へ拡張予定）。
 
+23. **重複ハンドラが発火しないこと（1クリック=1回のみ）**
+    * プレビュー内の同じ `.scene-link` を1回クリックした際、Console の「シーンに移動: ...」ログが1回だけ出力されること。
+    * 連続でページを開き直したり、モード切替（Visual/Raw、ビュー切替）を行っても、1クリックで複数回ログが出ないこと。
+    * 期待挙動は `markdown-converter.js` の `setupSceneLinkHandlers()` がキャプチャ段での `removeEventListener` を適用し、重複リスナーが残らないこと。
+
 # Testing Guide
 
 This document provides instructions for testing the Adventure Game AI project.
@@ -90,6 +95,12 @@ This document provides instructions for testing the Adventure Game AI project.
     * ブラウザでハードリロード（Ctrl+F5 / Cmd+Shift+R）を実行。
     * DevTools > Network で `editor.js?v=1.0.4` が読み込まれていることを確認（`v=1.0.3` ではなく）。
     * もし `v=1.0.3` が表示される場合は、`/editor` ページを一度閉じて再度開くか、キャッシュを完全削除して再試行。
+
+11. **シナリオ管理画面（scenario-editor）のバージョン確認**
+    * `http://localhost:8000/scenario-editor.html` を開き、Network で以下を確認：
+      - `/static/js/markdown-converter.js?v=1.0.4`
+      - `/static/js/editor.js?v=1.0.4`
+    * 両方が 200 で取得されていること（from disk cache 可）。旧バージョンが混在していないこと。
 
 11. **Quill 警告が出ないこと**
     * Console に以下の警告が表示されないことを確認。
