@@ -137,11 +137,17 @@ window.NovelGenPage = window.NovelGenPage || {};
   // シーンリンクのクリックイベントを委譲
   function setupSceneLinkHandlers() {
     // 既存のイベントリスナーを削除（重複防止）
-    document.body.removeEventListener('click', handleSceneLinkDelegation);
-    
-    // 新しいイベントリスナーを追加
+    document.body.removeEventListener('click', handleSceneLinkDelegation, true);
+
+    // すでに設定済みの場合は一旦解除してから再設定（フラグで明示管理）
+    if (window.NovelGenPage._sceneHandlersAttached) {
+      console.log('既存のシーンリンクハンドラをリセットします');
+    }
+
+    // 新しいイベントリスナーを追加（キャプチャ段で委譲）
     document.body.addEventListener('click', handleSceneLinkDelegation, true);
-    
+    window.NovelGenPage._sceneHandlersAttached = true;
+
     console.log('シーンリンクハンドラをセットアップしました');
   }
   
