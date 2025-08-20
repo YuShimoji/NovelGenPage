@@ -6,7 +6,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "test:verbose": "jest --runInBand --verbose"
   },
   "keywords": [],
   "author": "",

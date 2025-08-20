@@ -172,7 +172,7 @@ This document provides instructions for testing the Adventure Game AI project.
    ```
 2. 実行
    ```bash
-   npx jest --runInBand --verbose
+   npm run test:verbose
    ```
 
 ### テスト項目
@@ -183,3 +183,11 @@ This document provides instructions for testing the Adventure Game AI project.
   - 通常の URL は通常の `<a href>` にフォールバックする。
 
 実行結果がグリーンであることを確認してください。失敗する場合はブラウザ側の手動回帰テスト（上記 2. How to Test）で再現の有無を確認し、`static/js/markdown-converter.js` の `renderer.link` 実装差異を見直してください。
+
+## 5. 継続的インテグレーション（CI）
+
+- GitHub Actions のワークフロー（`.github/workflows/ci.yml`）で以下を自動実行します。
+  - Node.js 20 をセットアップ
+  - `npm ci` による依存関係インストール
+  - `npm test -- --runInBand --verbose` による Jest テスト
+- プッシュ/プルリクエストで自動起動します。詳細結果は GitHub の Actions タブとステータスバッジに反映されます。

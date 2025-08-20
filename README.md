@@ -1,5 +1,7 @@
 # NovelGenPage
 
+![CI](https://github.com/your-username/NovelGenPage/actions/workflows/ci.yml/badge.svg)
+
 インタラクティブな物語生成・プレイプラットフォームです。AIを活用して動的な物語を生成し、ユーザーは選択肢を通じて物語の進行に影響を与えることができます。
 
 ## 特徴
@@ -59,4 +61,11 @@
 5. ブラウザでアプリケーションにアクセス:
    - バックエンドのみの場合は: `http://localhost:8000`
    - フロントエンド開発サーバーを使用する場合は: `http://localhost:3000` (APIリクエストは8000番ポートにプロキシされます)
+
+
+## CI（GitHub Actions）
+
+- このリポジトリには GitHub Actions による CI が設定されています（`.github/workflows/ci.yml`）。
+- Node.js 20 上で `npm ci` を実行し、Jest テスト（`npm test -- --runInBand --verbose`）を自動で実行します。
+- プルリクエスト/プッシュで自動的に起動し、テスト結果がバッジとチェックとして表示されます。
 
