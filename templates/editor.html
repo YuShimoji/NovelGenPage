@@ -5,7 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>シナリオエディタ（管理者専用） - NovelGenPage</title>
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/static/css/editor.css">
+  <!-- メインCSS（プレビュー環境でも確実に読み込むためバージョン付与） -->
+  <link id="editor-css" rel="stylesheet" href="/static/css/editor.css?v=1.0.1">
+  <script>
+    (function(){
+      function injectFallback(){
+        var origin = (window.EDITOR_BACKEND_ORIGIN) || (location.protocol + '//127.0.0.1:8000');
+        var alt = document.createElement('link');
+        alt.rel = 'stylesheet';
+        alt.href = origin + '/static/css/editor.css?v=1.0.1';
+        document.head.appendChild(alt);
+        console.warn('editor.css: primary load failed or not applied. Fallback injected from', alt.href);
+      }
+      // onerror でのフォールバック
+      var link = document.getElementById('editor-css');
+      if (link) {
+        link.addEventListener('error', injectFallback);
+      }
+      // 遅延確認（styleSheets へ反映が無い場合にフォールバック）
+      window.addEventListener('load', function(){
+        setTimeout(function(){
+          var applied = Array.prototype.some.call(document.styleSheets, function(s){
+            return s && s.href && s.href.indexOf('editor.css') !== -1;
+          });
+          if (!applied) injectFallback();
+        }, 1200);
+      });
+    })();
+  </script>
   <!-- Quill エディタのスタイルシート -->
   <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
   <!-- Font Awesome アイコン -->
