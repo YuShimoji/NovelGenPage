@@ -518,6 +518,38 @@ class SimpleEditor {
 
 }
 
+// シーンナビゲーションハンドラ（markdown-converter.js から呼び出される）
+// 仕様: (scene:<id>) の最初の出現位置へカーソル移動し、プレビュー領域を上部へスクロール
+window.NovelGenPage.navigateToScene = function(sceneId, sceneName){
+  try {
+    const inst = window.NovelGenPage && window.NovelGenPage.editor;
+    if (!inst) return;
+    const q = inst.quill;
+    // ステータスメッセージ
+    inst.ui?.showStatus?.(`シーンに移動: ${sceneName || ''} (ID: ${sceneId})`, 'info');
+    // Quill テキストから (scene:<id>) の位置を検索
+    if (q && typeof q.getText === 'function') {
+      const text = q.getText() || '';
+      const marker = `(scene:${sceneId})`;
+      const idx = text.indexOf(marker);
+      if (idx >= 0) {
+        try {
+          q.setSelection(idx, 0, 'api');
+          q.focus();
+        } catch (_) {}
+      }
+    }
+    // プレビュー領域へ軽くスクロール（将来的に h2 へのアンカー移動へ拡張予定）
+    if (inst.ui && inst.ui.previewElement) {
+      try {
+        inst.ui.previewElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (_) {}
+    }
+  } catch (e) {
+    console.warn('navigateToScene failed', e);
+  }
+}
+
 // グローバル初期化関数
 function initializeEditor() {
   console.log('Global initializeEditor called');

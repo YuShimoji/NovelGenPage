@@ -26,8 +26,11 @@
   - 進捗: `__tests__/markdown-converter.test.js` を追加（関数API/parse API 両対応の互換確認、scene: リンクの `.scene-link` 変換検証）
 - [ ] S1-6: プレビューのクリックハンドラ（scene: のナビゲーション仕様設計）
   - 進捗: `static/js/markdown-converter.js` の `handleSceneLinkClick()` を委譲イベント対応で堅牢化（`currentTarget/closest/this` の順に解決）。
+  - 進捗(追加): `static/js/editor.js` に `window.NovelGenPage.navigateToScene(sceneId, sceneName)` を実装し、クリック時の警告を解消。`TESTING.md` に検証手順を追加。
 - [ ] S1-7: 画像アップロードのAPI設計（エンドポイント/認証/保存先）
 - [ ] S1-8: ドキュメント更新（PROGRESS/TESTING/EDITOR_TASKS/TODO 一貫性チェック）
+ - [ ] S1-9: プレビュー別ポート時の editor.css フォールバック対応
+  - 進捗: `templates/editor.html` にフォールバック挿入を実装（onerror + styleSheets 遅延確認、`127.0.0.1:8000` からの再取得）。`TESTING.md` に確認手順を追記。完了。
 
 ## フロントエンド
 

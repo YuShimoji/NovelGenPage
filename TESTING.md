@@ -1,3 +1,22 @@
+#### editor.css フォールバック確認（プレビュー別ポート時）
+
+19. **CSS の適用確認**
+    * `/editor` を別ポートのプレビューで開いた場合でもスタイルが適用されること（`/static/css/editor.css?v=1.0.1`）。
+    * コンソールに `editor.css: primary load failed or not applied. Fallback injected` の警告が1回表示され、その後は見た目が整うこと。
+    * ネットワークタブに `http://127.0.0.1:8000/static/css/editor.css?v=1.0.1` が 200 で取得されていること。
+    * 補足: IDE のプレビューや一時サーバは `http://localhost:49191` のようにランダムな高番ポートになります（ブラウザのアドレスバーのポート番号が対象）。本フォールバックはそのような別ポートでの `/static/...` 参照失敗時に、バックエンド既定の `127.0.0.1:8000` からCSSを再取得します。
+
+#### シーンリンクのナビゲーション確認（navigateToScene 実装）
+
+20. **警告が出ないこと**
+    * プレビュー内の `.scene-link` をクリックしても「navigateToScene ハンドラが設定されていません」という警告が出ないこと。
+
+21. **エディタのカーソル移動**
+    * クリックしたシーンIDに対応する `(scene:<id>)` の最初の位置へカーソルが移動し、エディタがフォーカスされること。
+
+22. **プレビューのスクロール**
+    * プレビュー領域が上部へスムーズスクロールすること（将来的にアンカー移動へ拡張予定）。
+
 # Testing Guide
 
 This document provides instructions for testing the Adventure Game AI project.
